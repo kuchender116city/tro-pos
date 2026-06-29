@@ -1,0 +1,1536 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#185FA5">
+<title>ระบบตรวจสภาพรถ (ตรอ)</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.5.0/dist/tabler-icons.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap');
+  :root{
+    --blue:#185FA5;--blue-lt:#E6F1FB;--blue-bd:#B5D4F4;
+    --bg:#F5F6FA;--card:#fff;--border:#e2e5ea;--border2:#c8cdd6;
+    --txt:#1a1d23;--txt2:#5a6170;--txt3:#9199a8;
+    --green-bg:#EAF3DE;--green-txt:#3B6D11;
+    --amber-bg:#FAEEDA;--amber-txt:#633806;
+    --radius:10px;--radius-sm:7px;
+    --shadow:0 1px 4px rgba(0,0,0,.08);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--txt);font-size:15px;min-height:100vh;}
+
+  /* ===== TOP BAR ===== */
+  .topbar{background:var(--blue);color:#fff;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(24,95,165,.3);}
+  .topbar-title{font-size:16px;font-weight:600;display:flex;align-items:center;gap:8px;}
+  .topbar-date{font-size:11px;opacity:.85;text-align:right;line-height:1.4;}
+
+  /* ===== NAV TABS ===== */
+  .nav{display:flex;background:var(--card);border-bottom:1px solid var(--border);overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+  .nav::-webkit-scrollbar{display:none;}
+  .nb{flex:1;min-width:90px;padding:11px 8px;font-size:13px;background:none;border:none;border-bottom:3px solid transparent;cursor:pointer;color:var(--txt2);font-family:'Sarabun',sans-serif;white-space:nowrap;display:flex;align-items:center;justify-content:center;gap:5px;}
+  .nb.on{color:var(--blue);border-bottom-color:var(--blue);font-weight:600;}
+
+  /* ===== LAYOUT ===== */
+  .page{display:none;animation:fadein .15s ease;}
+  .page.on{display:block;}
+  @keyframes fadein{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+  /* ===== SALE PAGE ===== */
+  .sale-layout{display:flex;gap:0;}
+  @media(min-width:720px){
+    .sale-layout{display:grid;grid-template-columns:340px 1fr;}
+  }
+  .lp{background:var(--card);border-right:1px solid var(--border);}
+  .rp{background:var(--bg);}
+
+  /* ===== SECTION HEADER ===== */
+  .sh{padding:9px 14px;font-size:11px;font-weight:600;color:var(--txt3);border-bottom:1px solid var(--border);background:var(--bg);text-transform:uppercase;letter-spacing:.06em;}
+
+  /* ===== FORM ===== */
+  .vform{padding:12px 14px;display:flex;flex-direction:column;gap:9px;border-bottom:1px solid var(--border);background:var(--card);}
+  .fr{display:flex;gap:8px;}
+  .fg{display:flex;flex-direction:column;gap:3px;flex:1;}
+  .fg label{font-size:11px;font-weight:600;color:var(--txt2);}
+  .fg input,.fg select{padding:8px 10px;font-size:14px;border:1px solid var(--border2);border-radius:var(--radius-sm);background:#fff;color:var(--txt);font-family:'Sarabun',sans-serif;width:100%;}
+  .fg input:focus,.fg select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(24,95,165,.12);}
+
+  /* ===== SERVICE LIST ===== */
+  .slist{background:var(--card);}
+  .scat{border-bottom:1px solid var(--border);}
+  .catlabel{font-size:11px;font-weight:700;color:var(--txt3);padding:8px 14px 4px;text-transform:uppercase;letter-spacing:.05em;background:var(--bg);}
+  .svcrow{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s;}
+  .svcrow:last-child{border-bottom:none;}
+  .svcrow:active{background:#f0f5fb;}
+  .svcrow.sel{background:var(--blue-lt);}
+  .sn{font-size:14px;color:var(--txt);flex:1;padding-right:8px;}
+  .sp{font-size:14px;font-weight:600;color:var(--blue);white-space:nowrap;}
+  .addbtn{width:28px;height:28px;border-radius:50%;background:var(--blue-lt);border:none;cursor:pointer;color:var(--blue);font-size:18px;line-height:1;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .1s;}
+  .addbtn.rm{background:#fce8e8;color:#c0392b;}
+
+  /* ===== TAX INPUT ROW ===== */
+  .tax-row{padding:10px 14px;border-bottom:1px solid var(--border);background:var(--card);}
+  .tax-row-inner{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .tax-label{font-size:14px;color:var(--txt);flex:1;min-width:120px;}
+  .tax-input-wrap{display:flex;align-items:center;gap:6px;}
+  .tax-input-wrap input{width:110px;padding:7px 10px;font-size:14px;border:1px solid var(--border2);border-radius:var(--radius-sm);text-align:right;font-family:'Sarabun',sans-serif;color:var(--txt);}
+  .tax-input-wrap input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(24,95,165,.12);}
+  .tax-unit{font-size:13px;color:var(--txt2);}
+  .tax-addbtn{width:28px;height:28px;border-radius:50%;background:var(--blue-lt);border:none;cursor:pointer;color:var(--blue);font-size:18px;line-height:1;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .tax-addbtn.rm{background:#fce8e8;color:#c0392b;}
+
+  /* ===== CART ===== */
+  .cart{padding:10px 14px;background:var(--card);border-top:1px solid var(--border);}
+  .ch{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+  .ct{font-size:14px;font-weight:600;color:var(--txt);}
+  .clrbtn{font-size:13px;color:#c0392b;background:none;border:none;cursor:pointer;font-family:'Sarabun',sans-serif;}
+  .ci{display:flex;align-items:center;gap:6px;padding:6px 9px;background:var(--bg);border-radius:var(--radius-sm);margin-bottom:5px;}
+  .cin{flex:1;font-size:13px;color:var(--txt);}
+  .cip{font-size:13px;font-weight:600;color:var(--blue);}
+  .cix{background:none;border:none;cursor:pointer;color:var(--txt3);font-size:16px;line-height:1;padding:0 2px;}
+
+  /* ===== SUMMARY ===== */
+  .sumbox{margin:0 14px 10px;padding:10px 12px;background:var(--bg);border-radius:var(--radius);border:1px solid var(--border);display:flex;flex-direction:column;gap:5px;}
+  .sr{display:flex;justify-content:space-between;font-size:13px;color:var(--txt2);}
+  .sr.tot{font-size:15px;font-weight:700;color:var(--txt);border-top:1px solid var(--border);padding-top:6px;margin-top:3px;}
+
+  /* ===== ACTION BUTTONS ===== */
+  .actbtns{display:flex;gap:8px;padding:0 14px 14px;background:var(--card);}
+  .bp{flex:1;padding:11px;background:var(--blue);color:#fff;border:none;border-radius:var(--radius);font-size:14px;font-weight:600;cursor:pointer;font-family:'Sarabun',sans-serif;}
+  .bp:active{background:#0e4c8a;}
+  .bs-btn{padding:11px 14px;background:#fff;color:var(--txt);border:1px solid var(--border2);border-radius:var(--radius);font-size:14px;cursor:pointer;font-family:'Sarabun',sans-serif;display:flex;align-items:center;gap:5px;}
+  .bs-btn:active{background:var(--bg);}
+
+  /* ===== RECEIPT AREA ===== */
+  .rarea{padding:16px;display:flex;flex-direction:column;align-items:center;}
+  .rctrl{display:flex;gap:8px;margin-bottom:12px;width:100%;max-width:600px;flex-wrap:wrap;}
+  .rctrl .bs-btn{flex:1;min-width:120px;justify-content:center;}
+  .empty-r{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;gap:12px;color:var(--txt3);text-align:center;}
+
+  /* ===== A4 RECEIPT ===== */
+  .A4{width:100%;max-width:595px;background:#ffffff;padding:16px;color:#1a1a1a;font-family:'Sarabun',sans-serif;font-size:13px;border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);}
+  .rtitle{font-size:17px;font-weight:700;color:#185FA5;text-align:center;margin-bottom:2px;}
+  .rsub{font-size:12px;color:#555;text-align:center;line-height:1.5;}
+  .rdash{border:none;border-top:1px dashed #ccc;margin:8px 0;}
+  .rsolid{border:none;border-top:2px solid #185FA5;margin:8px 0;}
+  .rmeta{display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px;}
+  .vbox{background:#f0f6ff;border:1px solid #b5d4f4;border-radius:6px;padding:9px 12px;margin:8px 0;}
+  .vrow{display:flex;gap:14px;flex-wrap:wrap;}
+  .vitem{display:flex;flex-direction:column;gap:1px;}
+  .vlabel{color:#666;font-size:11px;}
+  .vval{font-weight:600;color:#1a1a1a;font-size:13px;}
+  .ith{display:flex;font-size:11px;color:#666;border-bottom:1px solid #ddd;padding-bottom:3px;margin-bottom:3px;}
+  .irow{display:flex;font-size:12px;padding:2px 0;}
+  .c0{width:20px;flex-shrink:0;}
+  .cn{flex:1;padding-right:4px;}
+  .cq{width:28px;text-align:center;flex-shrink:0;}
+  .cu{width:72px;text-align:right;flex-shrink:0;}
+  .ctot{width:72px;text-align:right;flex-shrink:0;}
+  .rtots{margin-top:6px;}
+  .trw{display:flex;justify-content:space-between;font-size:12px;padding:2px 0;}
+  .trw.grand{font-size:16px;font-weight:700;color:#185FA5;border-top:2px solid #185FA5;padding-top:5px;margin-top:4px;}
+  .certbox{background:#fff8e1;border:1px solid #FAC775;border-radius:6px;padding:8px 12px;margin-top:10px;text-align:center;}
+  .stamparea{display:flex;justify-content:space-between;margin-top:20px;}
+  .stmp{text-align:center;font-size:11px;color:#666;}
+  .sline{border-top:1px solid #999;width:100px;margin:28px auto 4px;}
+  .rfooter{text-align:center;margin-top:10px;}
+
+  /* ===== HISTORY ===== */
+  .hist-wrap{padding:16px;}
+  .hist-toolbar{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center;}
+  .hist-toolbar input{flex:1;min-width:160px;padding:9px 12px;font-size:14px;border:1px solid var(--border2);border-radius:var(--radius-sm);font-family:'Sarabun',sans-serif;background:#fff;color:var(--txt);}
+  .hist-toolbar input:focus{outline:none;border-color:var(--blue);}
+  .hexp-btns{display:flex;gap:6px;flex-wrap:wrap;}
+  .hexp-btns .bs-btn{font-size:13px;padding:8px 12px;min-width:0;flex:none;}
+  .hist-item{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:#fff;border:1px solid var(--border);border-radius:var(--radius);margin-bottom:8px;cursor:pointer;box-shadow:var(--shadow);}
+  .hist-item:active{background:var(--bg);}
+  .badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;}
+  .bs-ok{background:var(--green-bg);color:var(--green-txt);}
+
+  /* ===== SETTINGS ===== */
+  .cfg-wrap{padding:16px;max-width:480px;}
+  .cfg-wrap .fg{margin-bottom:10px;}
+  .cfg-wrap .fg input{padding:9px 12px;font-size:14px;}
+
+  /* ===== TOAST ===== */
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#1a1d23;color:#fff;padding:10px 20px;border-radius:30px;font-size:13px;font-weight:500;z-index:999;transition:transform .25s ease,opacity .25s;opacity:0;pointer-events:none;white-space:nowrap;}
+  .toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
+
+  /* ===== INSURANCE MODAL ===== */
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:center;justify-content:center;padding:16px;}
+  .modal-overlay.on{display:flex;}
+  .modal-box{background:#fff;border-radius:14px;width:100%;max-width:420px;max-height:90vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.18);}
+  .modal-head{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid var(--border);position:sticky;top:0;background:#fff;border-radius:14px 14px 0 0;}
+  .modal-title{font-size:15px;font-weight:600;color:var(--txt);}
+  .modal-close{background:none;border:none;font-size:20px;cursor:pointer;color:var(--txt2);line-height:1;padding:2px 6px;}
+  .ins-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:14px;}
+  .ins-card{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 8px;border:2px solid var(--border);border-radius:10px;cursor:pointer;transition:border-color .15s,background .15s;text-align:center;}
+  .ins-card:hover{border-color:var(--blue);background:var(--blue-lt);}
+  .ins-card.picked{border-color:var(--blue);background:var(--blue-lt);}
+  .ins-logo{width:52px;height:52px;object-fit:contain;border-radius:8px;}
+  .ins-logo-txt{width:52px;height:52px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;text-align:center;line-height:1.2;}
+  .ins-name{font-size:11px;font-weight:600;color:var(--txt);line-height:1.3;}
+  /* PRB row badge */
+  .prb-company-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 9px 3px 5px;background:var(--blue-lt);border:1px solid var(--blue-bd);border-radius:20px;font-size:11px;font-weight:600;color:var(--blue);margin-top:4px;cursor:pointer;}
+  .prb-company-badge .dot{width:8px;height:8px;border-radius:50%;}
+
+  /* ===== PRINT ===== */
+  @media print{
+    body>*:not(#print-frame){display:none!important;}
+    #print-frame{display:block!important;position:fixed;top:0;left:0;width:100%;height:100%;border:none;}
+  }
+</style>
+</head>
+<body>
+
+<div id="toast" class="toast"></div>
+
+<!-- ===== MODAL เลือกบริษัท พ.ร.บ. ===== -->
+<div id="ins-modal" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.45);align-items:center;justify-content:center;padding:16px;">
+  <div style="background:#fff;border-radius:14px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.25);">
+    <div style="padding:16px 18px 12px;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <div style="font-size:16px;font-weight:700;color:#1a1d23;">เลือกบริษัทประกันภัย</div>
+        <div id="ins-modal-sub" style="font-size:12px;color:#888;margin-top:2px;"></div>
+      </div>
+      <button onclick="closeInsModal()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#888;line-height:1;">×</button>
+    </div>
+    <div id="ins-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:16px;"></div>
+    <div style="padding:0 16px 16px;">
+      <button onclick="closeInsModal()" style="width:100%;padding:10px;background:#f5f6fa;border:1px solid #e2e5ea;border-radius:8px;font-size:14px;cursor:pointer;font-family:'Sarabun',sans-serif;color:#5a6170;">ยกเลิก</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== INSURANCE COMPANY MODAL ===== -->
+<div class="modal-overlay" id="ins-modal" onclick="closeInsModal(event)">
+  <div class="modal-box">
+    <div class="modal-head">
+      <span class="modal-title">เลือกบริษัทประกันภัย พ.ร.บ.</span>
+      <button class="modal-close" onclick="closeInsModal(null)">×</button>
+    </div>
+    <div class="ins-grid" id="ins-grid"></div>
+  </div>
+</div>
+
+<div class="topbar">
+  <div class="topbar-title"><i class="ti ti-car"></i> ระบบตรวจสภาพรถ (ตรอ)</div>
+  <div style="text-align:right;">
+    <div class="topbar-date" id="datenow"></div>
+    <div id="gs-status" style="font-size:10px;margin-top:2px;color:#ffffffaa;">🟡 กำลังเชื่อมต่อ...</div>
+  </div>
+</div>
+
+<div class="nav">
+  <button class="nb on" onclick="stab('sale')" id="tab-sale"><i class="ti ti-shopping-cart"></i> ขาย/ออกใบเสร็จ</button>
+  <button class="nb" onclick="stab('hist')" id="tab-hist"><i class="ti ti-history"></i> ประวัติ</button>
+  <button class="nb" onclick="stab('summary')" id="tab-summary"><i class="ti ti-chart-bar"></i> สรุปยอด</button>
+  <button class="nb" onclick="stab('taxcheck')" id="tab-taxcheck"><i class="ti ti-clipboard-check"></i> เช็คต่อภาษี</button>
+  <button class="nb" onclick="stab('taxdone')" id="tab-taxdone"><i class="ti ti-circle-check"></i> ต่อภาษีสำเร็จ <span id="taxdone-badge" style="display:none;background:#2e7d32;color:#fff;border-radius:10px;font-size:11px;padding:1px 7px;margin-left:3px;"></span></button>
+  <button class="nb" onclick="stab('cfg')" id="tab-cfg"><i class="ti ti-settings"></i> ตั้งค่า</button>
+</div>
+
+<!-- ===== SALE PAGE ===== -->
+<div id="pg-sale" class="page on">
+  <div class="sale-layout">
+
+    <div class="lp">
+      <div class="sh">ข้อมูลรถและลูกค้า</div>
+      <div class="vform">
+        <div class="fr">
+          <div class="fg" style="flex:2;">
+            <label>ทะเบียนรถ *</label>
+            <input id="plate" placeholder="กข 1234 กทม." style="text-transform:uppercase;">
+          </div>
+          <div class="fg">
+            <label>ประเภทรถ</label>
+            <select id="vtype">
+              <option>รย.1</option>
+              <option>รย.3</option>
+              <option>รย.2</option>
+              <option>รถจักรยานยนต์</option>
+              <option>อื่นๆ</option>
+            </select>
+          </div>
+        </div>
+        <div class="fg">
+          <label>ชื่อเจ้าของ / ผู้นำรถเข้า</label>
+          <input id="owner" placeholder="ชื่อ-นามสกุล">
+        </div>
+        <div class="fr">
+          <div class="fg"><label>เบอร์โทรศัพท์</label><input id="phone" placeholder="08x-xxx-xxxx" type="tel"></div>
+          <div class="fg"><label>ปีรถ (พ.ศ.)</label><input id="cyear" placeholder="256x" type="number"></div>
+        </div>
+      </div>
+
+      <div class="sh">รายการบริการ</div>
+      <div class="slist" id="slist"></div>
+
+      <!-- ค่าภาษีรถ (กรอกเอง) -->
+      <div class="tax-row" id="tax-row">
+        <div class="catlabel" style="padding:6px 0 5px;background:none;">ค่าภาษีรถ</div>
+        <div class="tax-row-inner">
+          <span class="tax-label">ค่าภาษีประจำปี (กรอกจำนวนเงิน)</span>
+          <div class="tax-input-wrap">
+            <input type="number" id="taxamt" placeholder="0" min="0" step="1" inputmode="numeric">
+            <span class="tax-unit">บาท</span>
+            <button class="tax-addbtn" id="taxbtn" onclick="toggleTax()">+</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cart">
+        <div class="ch">
+          <span class="ct"><i class="ti ti-clipboard-list" style="font-size:14px;vertical-align:-2px;"></i> รายการที่เลือก</span>
+          <button class="clrbtn" onclick="clearCart()">ล้างทั้งหมด</button>
+        </div>
+        <div id="citems"><p style="font-size:13px;color:var(--txt3);">ยังไม่มีรายการ</p></div>
+      </div>
+
+      <div class="sumbox" id="sumbox" style="display:none;">
+      <div class="sr tot"><span>รวมทั้งสิ้น</span><span id="grand">0.00</span></div>
+      </div>
+
+      <div class="actbtns">
+        <button class="bs-btn" onclick="preview()"><i class="ti ti-eye"></i> ดูใบเสร็จ</button>
+        <button class="bp" onclick="confirmSale()"><i class="ti ti-receipt"></i> ออกใบเสร็จ &amp; บันทึก</button>
+      </div>
+    </div>
+
+    <div class="rp">
+      <div class="rarea" id="rarea">
+        <div class="empty-r" id="empty-msg">
+          <i class="ti ti-file-invoice" style="font-size:52px;color:var(--border2);"></i>
+          <p>กรอกข้อมูลรถ เลือกรายการบริการ<br>แล้วกด "ดูใบเสร็จ"</p>
+        </div>
+        <div id="rcpt-wrap" style="display:none;width:100%;display:none;flex-direction:column;align-items:center;">
+          <div class="rctrl">
+            <button class="bs-btn" onclick="doPDF()"><i class="ti ti-file-type-pdf"></i> บันทึก PDF (สั่งพิมพ์)</button>
+            <button class="bs-btn" onclick="dlJSON()"><i class="ti ti-photo-down"></i> บันทึกภาพ</button>
+            <button class="bs-btn" onclick="resetForm()"><i class="ti ti-plus"></i> รายการใหม่</button>
+          </div>
+          <div class="A4" id="rcpt-body"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===== HISTORY PAGE ===== -->
+<div id="pg-hist" class="page">
+  <div class="hist-wrap">
+    <div class="hist-toolbar">
+      <input type="text" id="hsearch" placeholder="ค้นหาทะเบียน / ชื่อ..." oninput="rHist()">
+      <div class="hexp-btns">
+        <button class="bs-btn" onclick="dlAllJSON()"><i class="ti ti-database-export"></i> JSON</button>
+        <button class="bs-btn" onclick="dlCSV()"><i class="ti ti-file-spreadsheet"></i> CSV</button>
+      </div>
+    </div>
+    <div id="hlist"></div>
+  </div>
+</div>
+
+<!-- ===== SUMMARY PAGE ===== -->
+<div id="pg-summary" class="page">
+  <div style="padding:16px;">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px;">
+      <div class="fg" style="min-width:130px;"><label>วันที่เริ่ม</label><input type="date" id="sum-from" style="padding:8px 10px;font-size:13px;border:1px solid var(--border2);border-radius:var(--radius-sm);font-family:'Sarabun',sans-serif;background:#fff;color:var(--txt);width:100%;"></div>
+      <div class="fg" style="min-width:130px;"><label>วันที่สิ้นสุด</label><input type="date" id="sum-to" style="padding:8px 10px;font-size:13px;border:1px solid var(--border2);border-radius:var(--radius-sm);font-family:'Sarabun',sans-serif;background:#fff;color:var(--txt);width:100%;"></div>
+      <button class="bp" onclick="calcSummary()" style="padding:9px 18px;width:auto;"><i class="ti ti-calculator" style="font-size:13px;vertical-align:-2px;"></i> คำนวณ</button>
+      <button class="bs-btn" onclick="setToday()">วันนี้</button>
+      <button class="bs-btn" onclick="setThisMonth()">เดือนนี้</button>
+    </div>
+    <div id="sum-result"></div>
+  </div>
+</div>
+
+<!-- ===== TAX CHECK PAGE ===== -->
+<div id="pg-taxcheck" class="page">
+  <div style="padding:16px 16px 120px;">
+    <div style="font-size:16px;font-weight:700;color:var(--txt);margin-bottom:4px;">🔍 เช็คสถานะการต่อภาษีรถ</div>
+    <div style="font-size:12px;color:var(--txt3);margin-bottom:14px;">ค้นหาจากทะเบียนรถหรือชื่อเจ้าของ ติ๊กเลือกและตั้งสถานะแต่ละคัน ระบบจะคำนวณเงินที่ต้องพกไปโดยอัตโนมัติ</div>
+    <div style="display:flex;gap:8px;margin-bottom:16px;">
+      <input type="text" id="tc-search" placeholder="ทะเบียนรถ หรือ ชื่อเจ้าของ..." style="flex:1;padding:10px 12px;font-size:14px;border:1px solid var(--border2);border-radius:var(--radius-sm);font-family:'Sarabun',sans-serif;background:#fff;color:var(--txt);" oninput="taxCheck()">
+      <button class="bp" onclick="taxCheck()" style="padding:10px 16px;width:auto;">ค้นหา</button>
+    </div>
+    <div id="tc-result"></div>
+  </div>
+  <!-- Sticky bottom summary bar -->
+  <div id="tc-bar" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:200;background:linear-gradient(135deg,#185FA5,#1565C0);color:#fff;padding:14px 20px;box-shadow:0 -4px 16px rgba(0,0,0,.2);">
+    <div style="display:flex;justify-content:space-between;align-items:center;max-width:700px;margin:0 auto;flex-wrap:wrap;gap:8px;">
+      <div>
+        <div style="font-size:12px;opacity:.85;">กำลังไปต่อภาษี</div>
+        <div style="font-size:18px;font-weight:700;"><span id="tc-count">0</span> คัน</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:12px;opacity:.85;">รวมเงินภาษีที่ต้องพกไป</div>
+        <div style="font-size:24px;font-weight:700;color:#FFE082;">฿<span id="tc-total">0</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TAX DONE PAGE ===== -->
+<div id="pg-taxdone" class="page">
+  <div style="padding:16px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;flex-wrap:wrap;gap:8px;">
+      <div>
+        <div style="font-size:16px;font-weight:700;color:var(--txt);">✅ ต่อภาษีสำเร็จแล้ว</div>
+        <div style="font-size:12px;color:var(--txt3);">รถที่ถูกเปลี่ยนสถานะเป็น "ต่อภาษีแล้ว" จะแสดงที่นี่</div>
+      </div>
+      <button class="bs-btn" onclick="clearDone()" style="font-size:12px;color:#c0392b;border-color:#c0392b;">ล้างรายการสำเร็จ</button>
+    </div>
+    <div id="taxdone-list" style="margin-top:14px;"></div>
+  </div>
+</div>
+
+<!-- ===== SETTINGS PAGE ===== -->
+<div id="pg-cfg" class="page">
+  <div class="cfg-wrap" style="max-width:600px;">
+    <div style="font-size:16px;font-weight:600;margin-bottom:14px;color:var(--txt);">ตั้งค่าข้อมูล ตรอ</div>
+    <div class="fg"><label>ชื่อสถานประกอบการ</label><input id="cn" placeholder="บริษัท/ร้าน..."></div>
+    <div class="fg"><label>เลขที่ใบอนุญาต ตรอ</label><input id="cl" placeholder="ตรอ.xx-xxxx"></div>
+    <div class="fg"><label>ที่อยู่</label><input id="ca" placeholder="เลขที่ ถนน ตำบล อำเภอ จังหวัด รหัสไปรษณีย์"></div>
+    <div class="fg"><label>เบอร์โทรศัพท์</label><input id="ct" placeholder="0xx-xxx-xxxx" type="tel"></div>
+    <div class="fg"><label>เลขประจำตัวผู้เสียภาษี</label><input id="cx" placeholder="x-xxxx-xxxxx-xx-x"></div>
+    <button class="bp" onclick="saveCfg()" style="margin-top:8px;width:100%;margin-bottom:20px;">บันทึกการตั้งค่าร้าน</button>
+
+    <div style="font-size:15px;font-weight:600;margin-bottom:4px;color:var(--txt);border-top:1px solid var(--border);padding-top:16px;">ค่าคอมมิชชั่น พ.ร.บ. แต่ละบริษัท (%)</div>
+    <div style="font-size:12px;color:var(--txt3);margin-bottom:12px;">ตั้งค่าเปอร์เซ็นต์ที่ได้รับต่อบริษัท ใช้คำนวณกำไรในหน้าสรุปยอด</div>
+    <div id="com-cfg-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;"></div>
+    <button class="bp" onclick="saveComCfg()" style="width:100%;">บันทึกค่าคอมมิชชั่น</button>
+
+    <!-- Google Sheets Sync Section -->
+    <div style="font-size:15px;font-weight:600;margin-bottom:4px;color:var(--txt);border-top:1px solid var(--border);padding-top:16px;margin-top:20px;">🔗 Google Sheets Sync</div>
+    <div style="font-size:12px;color:var(--txt3);margin-bottom:10px;">เชื่อมต่อกับ Google Sheets เพื่อซิงค์ข้อมูลข้ามเครื่อง</div>
+    <div style="padding:12px 14px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:10px;">
+      <div id="gs-status-cfg" style="font-size:13px;font-weight:500;margin-bottom:8px;">กำลังตรวจสอบ...</div>
+      <div id="offline-badge" style="display:none;font-size:12px;color:#e65100;margin-bottom:6px;"></div>
+      <div style="font-size:12px;color:var(--txt3);margin-bottom:4px;">🔄 Auto-refresh ทุก 60 วินาที</div>
+      <div style="font-size:12px;color:var(--txt3);">📴 โหมดออฟไลน์: บิลที่ออกระหว่างเน็ตขาดจะ sync อัตโนมัติเมื่อออนไลน์</div>
+      <div style="font-size:11px;color:#888;margin-top:6px;">⚠️ หาก Apps Script ยังไม่รองรับ JSONP ให้อัปเดตโค้ดตาม <a href="#" onclick="showGasNote();return false;" style="color:#185FA5;">คำแนะนำนี้</a></div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="bs-btn" onclick="gsFetchReceipts().then(()=>showToast('Sync เสร็จแล้ว'))" style="flex:1;justify-content:center;">
+        <i class="ti ti-refresh" style="font-size:13px;vertical-align:-2px;"></i> ซิงค์ตอนนี้
+      </button>
+      <button class="bs-btn" onclick="gsSyncQueue().then(()=>showToast('Upload คิวเสร็จ'))" style="flex:1;justify-content:center;">
+        <i class="ti ti-upload" style="font-size:13px;vertical-align:-2px;"></i> Upload บิลค้าง
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== INVOICE DETAIL MODAL ===== -->
+<div id="inv-modal" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.5);align-items:center;justify-content:center;padding:16px;">
+  <div style="background:#fff;border-radius:14px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.3);">
+    <div style="padding:14px 18px 10px;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:#fff;z-index:1;">
+      <div style="font-size:15px;font-weight:700;color:#1a1d23;">รายละเอียดบิล</div>
+      <button onclick="document.getElementById('inv-modal').style.display='none'" style="background:none;border:none;font-size:22px;cursor:pointer;color:#888;">×</button>
+    </div>
+    <div id="inv-modal-body" style="padding:16px;"></div>
+  </div>
+</div>
+
+<script>
+const SVCS=[
+  {cat:'ค่าตรวจสภาพ',items:[
+    {code:'TRO-01',name:'ค่าตรวจสภาพรถ',price:200},
+    {code:'TRO-02',name:'ค่าตรวจสภาพรถจักรยานยนต์',price:60},
+  ]},
+  {cat:'ประกันภัย พ.ร.บ.',items:[
+    {code:'PRB-01',name:'พ.ร.บ. รถยนต์ รย.1',price:645},
+    {code:'PRB-02',name:'พ.ร.บ. รถยนต์ รย.2',price:1184},
+    {code:'PRB-03x',name:'พ.ร.บ. รถยนต์ รย.3',price:968},
+    {code:'PRB-03',name:'พ.ร.บ. รถจักรยานยนต์',price:325},
+  ]},
+  {cat:'ค่าบริการต่อภาษีประจำปี',items:[
+    {code:'TAX-SVC',name:'ค่าบริการต่อภาษีรถ',price:180},
+  ]},
+];
+
+const INS_COS=[
+  {id:'icare',   name:'ไอแคร์ประกันภัย',      color:'#E53935', abbr:'iCare'},
+  {id:'tokio',   name:'โตเกียวมารีนประกันภัย', color:'#1565C0', abbr:'Tokio'},
+  {id:'viriya',  name:'วิริยะประกันภัย',        color:'#F57F17', abbr:'วิริยะ'},
+  {id:'deves',   name:'เทเวศประกันภัย',         color:'#FDD835', abbr:'DEVES', dark:true},
+  {id:'axa',     name:'แอกซ่าประกันภัย',        color:'#00539B', abbr:'AXA'},
+  {id:'tsi',     name:'ไทยเศรษฐกิจประกันภัย',  color:'#2E7D32', abbr:'TSI'},
+  {id:'intra',   name:'อินทรประกันภัย (สาขา)', color:'#558B2F', abbr:'อินทร'},
+  {id:'klang',   name:'กลาง RVP',               color:'#0D47A1', abbr:'กลาง', motoOnly:true},
+];
+
+// บริษัทที่รองรับ พ.ร.บ. รถยนต์ (ไม่รวมจักรยานยนต์)
+const INS_CAR=INS_COS.filter(c=>!c.motoOnly);
+// บริษัทที่รองรับ พ.ร.บ. จักรยานยนต์
+const INS_MOTO=INS_COS.filter(c=>c.motoOnly);
+
+let selectedInsCo=null; // {id, name, color, abbr}
+let pendingPRBCode=null; // code ที่รอเลือกบริษัทก่อน add
+
+let cart=[];
+let taxInCart=false;
+let rnum=parseInt(localStorage.getItem('tro_rnum')||'1000');
+let hist=JSON.parse(localStorage.getItem('tro_hist')||'[]');
+let cfg=JSON.parse(localStorage.getItem('tro_cfg')||'{"name":"สถานตรวจสภาพรถ XXX","license":"ตรอ.00-0000","addr":"123 ถนน... กรุงเทพฯ 10000","tel":"02-xxx-xxxx","tax":"x-xxxx-xxxxx-xx-x"}');
+
+/* ===== GOOGLE SHEETS SYNC ===== */
+const GAS_URL='https://script.google.com/macros/s/AKfycbyaa4gVKzO0VKXFFJyDus_oMnrOynS7k_guTjI1fs5MIicKrqWuZb8XwxM5ITLLRDOj/exec';
+let gsOnline=false;
+let offlineQueue=JSON.parse(localStorage.getItem('tro_offline_queue')||'[]');
+
+function saveQueue(){localStorage.setItem('tro_offline_queue',JSON.stringify(offlineQueue));}
+
+function gsStatus(ok,msg=''){
+  gsOnline=ok;
+  const label=ok?'🟢 Sheets: เชื่อมต่อแล้ว':'🔴 Sheets: '+(msg||'ออฟไลน์');
+  const color=ok?'#a5d6a7':'#ef9a9a';
+  const el=document.getElementById('gs-status');
+  if(el){el.textContent=label;el.style.color=color;}
+  const el2=document.getElementById('gs-status-cfg');
+  if(el2){
+    const qLen=offlineQueue.length;
+    el2.innerHTML=ok
+      ?'🟢 เชื่อมต่อ Google Sheets สำเร็จ'+(qLen>0?` <span style="color:#e65100">(กำลัง sync ${qLen} บิลที่ค้าง)</span>`:'')
+      :`🔴 โหมดออฟไลน์${qLen>0?' — มี '+qLen+' บิลรอ sync':''}`;
+    el2.style.color=ok?'#2e7d32':'#c0392b';
+  }
+  updateQueueBadge();
+}
+
+function updateQueueBadge(){
+  const b=document.getElementById('offline-badge');
+  if(!b)return;
+  if(offlineQueue.length>0){
+    b.style.display='inline';b.textContent='📤 '+offlineQueue.length+' บิลรอ sync';
+  } else {b.style.display='none';}
+}
+
+/* ดึงเลขบิล — ถ้าออฟไลน์ใช้เลขเครื่องตัวเอง */
+async function gsGetNextBillNum(){
+  if(!navigator.onLine) return localNextBillNum();
+  try{
+    const num=await jsonpGet('getNextBillNum',6000);
+    if(num&&num.num){gsStatus(true);return num.num;}
+    throw new Error('no num');
+  }catch(e){
+    gsStatus(false,'เน็ตขาด — ใช้เลขบิลเครื่องนี้');
+    return localNextBillNum();
+  }
+}
+
+function localNextBillNum(){
+  rnum++;localStorage.setItem('tro_rnum',rnum);
+  return'RCP-L'+String(rnum).padStart(5,'0');
+}
+
+/* บันทึกใบเสร็จ — ใช้ no-cors POST */
+async function gsSaveReceipt(rec){
+  const {profit}=calcBillProfit(rec.items);
+  const cost=rec.total-profit;
+  const payload={
+    action:'saveReceipt',
+    num:rec.num,date:rec.date,time:rec.time,
+    plate:rec.plate,vtype:rec.vtype,owner:rec.owner||'',
+    phone:rec.phone||'',cyear:rec.cyear||'',
+    items:rec.items.map(i=>i.name+(i.ins?' ('+i.ins+')':'')).join(', '),
+    total:rec.total,cost,profit
+  };
+  if(!navigator.onLine){
+    offlineQueue.push(payload);saveQueue();
+    gsStatus(false,'ออฟไลน์ — บันทึกไว้ในเครื่อง');return;
+  }
+  try{
+    // ใช้ no-cors เพื่อหลีกเลี่ยงปัญหา CORS จาก file://
+    await fetch(GAS_URL,{
+      method:'POST',
+      mode:'no-cors',
+      headers:{'Content-Type':'text/plain'},
+      body:JSON.stringify(payload)
+    });
+    gsStatus(true);
+  }catch(e){
+    offlineQueue.push(payload);saveQueue();
+    gsStatus(false,'บันทึกไม่ได้ — เก็บรอ sync');
+  }
+}
+
+/* JSONP helper — หลีกเลี่ยง CORS สำหรับ GET */
+function jsonpGet(action,timeout=8000){
+  return new Promise((resolve,reject)=>{
+    const cbName='gs_cb_'+Date.now();
+    const timer=setTimeout(()=>{
+      delete window[cbName];
+      const s=document.getElementById('jsonp_'+cbName);
+      if(s)s.remove();
+      reject(new Error('timeout'));
+    },timeout);
+    window[cbName]=function(data){
+      clearTimeout(timer);
+      delete window[cbName];
+      const s=document.getElementById('jsonp_'+cbName);
+      if(s)s.remove();
+      resolve(data);
+    };
+    const s=document.createElement('script');
+    s.id='jsonp_'+cbName;
+    s.src=GAS_URL+'?action='+action+'&callback='+cbName;
+    s.onerror=()=>{clearTimeout(timer);delete window[cbName];s.remove();reject(new Error('script error'));};
+    document.head.appendChild(s);
+  });
+}
+
+/* Auto-sync คิวที่ค้างเมื่อออนไลน์ */
+async function gsSyncQueue(){
+  if(offlineQueue.length===0)return;
+  if(!navigator.onLine)return;
+  const pending=[...offlineQueue];
+  let sent=0;
+  for(const payload of pending){
+    try{
+      await fetch(GAS_URL,{
+        method:'POST',mode:'no-cors',
+        headers:{'Content-Type':'text/plain'},
+        body:JSON.stringify(payload)
+      });
+      offlineQueue.shift();saveQueue();sent++;
+    }catch(e){break;}
+  }
+  if(sent>0){
+    showToast('✅ Sync '+sent+' บิลขึ้น Google Sheets แล้ว');
+    gsStatus(true);
+  }
+}
+
+/* ดึงข้อมูลจาก Sheets มา merge */
+async function gsFetchReceipts(){
+  if(!navigator.onLine){gsStatus(false,'ออฟไลน์');return;}
+  try{
+    const d=await jsonpGet('getReceipts',8000);
+    if(d&&d.rows){
+      const localNums=new Set(hist.map(h=>h.num));
+      const newRows=(d.rows||[])
+        .filter(r=>!localNums.has(r['เลขที่']))
+        .map(r=>({
+          num:r['เลขที่'],date:r['วันที่'],time:r['เวลา'],
+          plate:r['ทะเบียน'],vtype:r['ประเภท'],
+          owner:r['ชื่อเจ้าของ'],phone:r['โทร'],cyear:r['ปีรถ'],
+          items:[{code:'_gs',name:r['รายการ'],price:parseFloat(r['ยอดรวม'])||0}],
+          total:parseFloat(r['ยอดรวม'])||0,_fromSheets:true
+        }));
+      if(newRows.length){
+        hist=[...hist,...newRows].sort((a,b)=>b.num.localeCompare(a.num));
+        localStorage.setItem('tro_hist',JSON.stringify(hist));
+        if(document.getElementById('pg-hist').classList.contains('on'))rHist();
+        if(document.getElementById('pg-summary').classList.contains('on'))calcSummary();
+      }
+      gsStatus(true);
+      await gsSyncQueue();
+    }
+  }catch(e){
+    gsStatus(false,'เชื่อมต่อไม่ได้');
+  }
+}
+
+// ฟัง online/offline event
+window.addEventListener('online', ()=>{
+  gsStatus(true);showToast('🌐 เชื่อมต่ออินเทอร์เน็ตแล้ว กำลัง sync...');
+  setTimeout(()=>{gsFetchReceipts();gsSyncQueue();},1000);
+});
+window.addEventListener('offline', ()=>{
+  gsStatus(false,'เน็ตขาด');showToast('📴 ออฟไลน์ — บันทึกในเครื่องไว้ก่อน');
+});
+
+// Auto-refresh ทุก 60 วินาที
+setInterval(gsFetchReceipts, 60000);
+// เชื่อมต่อครั้งแรก
+setTimeout(gsFetchReceipts, 1500);
+
+function dn(){
+  const d=new Date();
+  const m=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+  return d.getDate()+' '+m[d.getMonth()]+' '+(d.getFullYear()+543);
+}
+function tn(){
+  const d=new Date();
+  return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')+' น.';
+}
+document.getElementById('datenow').innerHTML=dn()+'<br>'+tn();
+
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2200);
+}
+
+/* ===== RENDER SERVICES ===== */
+function rSvcs(){
+  document.getElementById('slist').innerHTML=SVCS.map(c=>`
+    <div class="scat">
+      <div class="catlabel">${c.cat}</div>
+      ${c.items.map(s=>{
+        const inCart=cart.find(x=>x.code===s.code);
+        const isPRB=s.code.startsWith('PRB-');
+        const cartItem=inCart;
+        const insName=cartItem&&cartItem.ins?' ('+cartItem.ins+')':'';
+        return`
+        <div class="svcrow ${inCart?'sel':''}" onclick="${isPRB?`openInsModal('${s.code}','${s.name.replace(/'/g,"\\'")}',${s.price})`:`tog('${s.code}','${s.name.replace(/'/g,"\\'")}',${s.price})`}">
+          <div style="flex:1;">
+            <span class="sn">${s.name}</span>
+            ${inCart&&insName?`<div style="font-size:11px;color:#185FA5;margin-top:1px;">🏢 ${cartItem.ins}</div>`:''}
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span class="sp">฿${s.price.toLocaleString()}</span>
+            <button class="addbtn ${inCart?'rm':''}" onclick="event.stopPropagation();${isPRB?`openInsModal('${s.code}','${s.name.replace(/'/g,"\\'")}',${s.price})`:`tog('${s.code}','${s.name.replace(/'/g,"\\'")}',${s.price})`}">${inCart?'−':'+'}</button>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`).join('');
+}
+
+/* ===== INSURANCE COMPANY MODAL ===== */
+function openInsModal(code,name,price){
+  // ถ้ามีอยู่แล้วในตะกร้า → ลบออกเลย
+  if(cart.find(x=>x.code===code)){
+    cart=cart.filter(x=>x.code!==code);
+    rSvcs();rCart();return;
+  }
+  // จักรยานยนต์ → เลือก กลาง RVP อัตโนมัติทันที
+  if(code==='PRB-03'){
+    const co=INS_COS.find(c=>c.id==='klang');
+    cart=cart.filter(x=>x.code!==code);
+    cart.push({code,name,price,ins:co.name,insColor:co.color});
+    rSvcs();rCart();
+    showToast('เพิ่ม '+name+' — '+co.name);
+    return;
+  }
+  // รถยนต์ → แสดง modal เลือกบริษัท
+  pendingPRBCode={code,name,price};
+  document.getElementById('ins-modal-sub').textContent=name+' — ฿'+price.toLocaleString();
+  const list=INS_CAR;
+  document.getElementById('ins-grid').innerHTML=list.map(co=>`
+    <div onclick="selectIns('${co.id}')" style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 8px;border:2px solid #eee;border-radius:10px;cursor:pointer;transition:all .15s;"
+      onmouseover="this.style.borderColor='${co.color}';this.style.background='#f8faff';"
+      onmouseout="this.style.borderColor='#eee';this.style.background='#fff';">
+      <div style="width:44px;height:44px;border-radius:50%;background:${co.color};display:flex;align-items:center;justify-content:center;color:${co.dark?'#333':'#fff'};font-size:12px;font-weight:700;text-align:center;line-height:1.2;">${co.abbr}</div>
+      <div style="font-size:11px;text-align:center;color:#1a1d23;font-weight:500;line-height:1.3;">${co.name}</div>
+    </div>`).join('');
+  document.getElementById('ins-modal').style.display='flex';
+}
+
+function selectIns(id){
+  if(!pendingPRBCode)return;
+  const co=INS_COS.find(x=>x.id===id);
+  if(!co)return;
+  const {code,name,price}=pendingPRBCode;
+  cart=cart.filter(x=>x.code!==code);
+  cart.push({code,name,price,ins:co.name,insColor:co.color});
+  pendingPRBCode=null;
+  closeInsModal();
+  rSvcs();rCart();
+  showToast('เพิ่ม '+name+' — '+co.name);
+}
+
+function closeInsModal(){
+  document.getElementById('ins-modal').style.display='none';
+  pendingPRBCode=null;
+}
+
+function tog(code,name,price){
+  const i=cart.findIndex(x=>x.code===code);
+  if(i>-1)cart.splice(i,1); else cart.push({code,name,price});
+  rSvcs();rCart();
+}
+
+/* ===== TAX TOGGLE ===== */
+function toggleTax(){
+  const amt=parseFloat(document.getElementById('taxamt').value)||0;
+  if(taxInCart){
+    taxInCart=false;
+    cart=cart.filter(x=>x.code!=='TAX-AMT');
+    document.getElementById('taxbtn').textContent='+';
+    document.getElementById('taxbtn').className='tax-addbtn';
+    document.getElementById('taxamt').disabled=false;
+  } else {
+    if(amt<=0){showToast('กรุณากรอกจำนวนเงินค่าภาษี');return;}
+    taxInCart=true;
+    cart=cart.filter(x=>x.code!=='TAX-AMT');
+    cart.push({code:'TAX-AMT',name:'ค่าภาษีรถประจำปี',price:amt});
+    document.getElementById('taxbtn').textContent='−';
+    document.getElementById('taxbtn').className='tax-addbtn rm';
+    document.getElementById('taxamt').disabled=true;
+  }
+  rCart();
+}
+
+document.getElementById('taxamt').addEventListener('keydown',function(e){if(e.key==='Enter')toggleTax();});
+
+function clearCart(){
+  cart=[];taxInCart=false;
+  document.getElementById('taxamt').value='';
+  document.getElementById('taxamt').disabled=false;
+  document.getElementById('taxbtn').textContent='+';
+  document.getElementById('taxbtn').className='tax-addbtn';
+  rSvcs();rCart();
+}
+
+function rCart(){
+  const el=document.getElementById('citems');
+  const sb=document.getElementById('sumbox');
+  if(!cart.length){
+    el.innerHTML='<p style="font-size:13px;color:var(--txt3);">ยังไม่มีรายการ</p>';
+    sb.style.display='none';return;
+  }
+  const tot=cart.reduce((s,i)=>s+i.price,0);
+  el.innerHTML=cart.map(i=>`
+    <div class="ci">
+      <div style="flex:1;">
+        <span class="cin">${i.name}</span>
+        ${i.ins?`<div style="font-size:11px;color:#185FA5;">🏢 ${i.ins}</div>`:''}
+      </div>
+      <span class="cip">฿${i.price.toLocaleString()}</span>
+      <button class="cix" onclick="removeItem('${i.code}')">×</button>
+    </div>`).join('');
+  sb.style.display='flex';sb.style.flexDirection='column';
+  document.getElementById('grand').textContent='฿'+tot.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',');
+}
+
+function removeItem(code){
+  if(code==='TAX-AMT'){
+    taxInCart=false;
+    document.getElementById('taxamt').disabled=false;
+    document.getElementById('taxbtn').textContent='+';
+    document.getElementById('taxbtn').className='tax-addbtn';
+    document.getElementById('taxamt').value='';
+  }
+  cart=cart.filter(x=>x.code!==code);
+  rSvcs();rCart();
+}
+
+/* ===== BUILD ONE SLIP BLOCK ===== */
+function buildSlip(num,plate,owner,phone,vtype,cyear,items,confirmed,isCustomer){
+  const tot=items.reduce((s,i)=>s+i.price,0);
+  const accent=isCustomer?'#185FA5':'#4a5568';
+  const infobg=isCustomer?'#f0f6ff':'#f5f5f5';
+  const infoborder=isCustomer?'#b5d4f4':'#ccc';
+  const label=isCustomer?'สำเนาลูกค้า (Customer Copy)':'สำเนาร้าน (Office Copy)';
+  const footer=isCustomer?'ขอบคุณที่ใช้บริการ — ใบเสร็จนี้ใช้เป็นหลักฐานการชำระเงิน':'สำเนาสำหรับเก็บไว้ที่ร้าน';
+  return`
+<div style="border:1.5px solid ${accent};border-radius:6px;overflow:hidden;font-family:'Sarabun','TH Sarabun New',Arial,sans-serif;">
+  <div style="background:${accent};color:#fff;text-align:center;padding:4px 0;font-size:11px;font-weight:700;letter-spacing:1px;">${label}</div>
+  <div style="padding:12px 18px;">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">
+      <div>
+        <div style="font-size:15px;font-weight:700;color:${accent};">${cfg.name}</div>
+        <div style="font-size:11px;color:#555;">ใบอนุญาต ${cfg.license} | โทร ${cfg.tel}</div>
+        <div style="font-size:11px;color:#555;">${cfg.addr}</div>
+        <div style="font-size:11px;color:#555;">เลขภาษี ${cfg.tax}</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0;">
+        <div style="font-size:9px;color:#999;">เลขที่ใบเสร็จ</div>
+        <div style="font-size:14px;font-weight:700;color:${accent};">${num}</div>
+        <div style="font-size:11px;color:#555;">${dn()}</div>
+        <div style="font-size:11px;color:#555;">${tn()}</div>
+      </div>
+    </div>
+    <div style="border-top:2px solid ${accent};margin:5px 0 8px;"></div>
+    <div style="text-align:center;font-size:13px;font-weight:700;color:${accent};margin-bottom:8px;letter-spacing:.5px;">ใบเสร็จรับเงิน / Receipt</div>
+    <div style="background:${infobg};border:1px solid ${infoborder};border-radius:4px;padding:8px 12px;margin-bottom:8px;display:flex;gap:20px;flex-wrap:wrap;">
+      <div><div style="font-size:9px;color:#888;">ทะเบียนรถ</div><div style="font-size:14px;font-weight:700;">${plate||'-'}</div></div>
+      <div><div style="font-size:9px;color:#888;">ประเภท</div><div style="font-size:13px;font-weight:600;">${vtype}</div></div>
+      ${cyear?`<div><div style="font-size:9px;color:#888;">ปีรถ</div><div style="font-size:13px;font-weight:600;">${cyear}</div></div>`:''}
+      ${owner?`<div><div style="font-size:9px;color:#888;">ชื่อเจ้าของ</div><div style="font-size:13px;font-weight:600;">${owner}</div></div>`:''}
+      ${phone?`<div><div style="font-size:9px;color:#888;">โทรศัพท์</div><div style="font-size:12px;">${phone}</div></div>`:''}
+    </div>
+    <div style="display:flex;font-size:11px;color:#888;border-bottom:1px solid #ccc;padding-bottom:3px;margin-bottom:4px;font-weight:600;">
+      <span style="flex:1;">รายการบริการ</span>
+      <span style="width:70px;text-align:right;">จำนวนเงิน</span>
+    </div>
+    ${items.map((it,i)=>`<div style="display:flex;font-size:12px;padding:3px 0;border-bottom:1px dotted #eee;">
+      <span style="flex:1;">${i+1}. ${it.name}${it.ins?' ('+it.ins+')':''}</span>
+      <span style="width:70px;text-align:right;font-weight:600;">${it.price.toLocaleString('th',{minimumFractionDigits:2})}</span>
+    </div>`).join('')}
+    <div style="border-top:1px dashed #ccc;margin:6px 0 4px;"></div>
+    <div style="display:flex;justify-content:space-between;font-size:16px;font-weight:700;color:${accent};border-top:2px solid ${accent};padding-top:5px;"><span>รวมทั้งสิ้น (Total)</span><span>฿${tot.toLocaleString('th',{minimumFractionDigits:2})}</span></div>
+    ${confirmed?`<div style="background:${isCustomer?'#fff8e1':'#f5f5f5'};border:1px solid ${isCustomer?'#FAC775':'#ccc'};border-radius:4px;padding:6px 10px;margin-top:8px;text-align:center;">
+      <div style="font-size:10px;color:#888;">ใบรับรองการตรวจสภาพรถ</div>
+      <div style="font-size:12px;font-weight:700;color:${isCustomer?'#633806':'#333'};">TRO-${num}</div>
+      <div style="font-size:11px;color:${isCustomer?'#854F0B':'#555'};">✓ ผ่านมาตรฐานกรมการขนส่งทางบก</div>
+    </div>`:''}
+    <div style="display:flex;justify-content:space-between;margin-top:16px;">
+      <div style="text-align:center;font-size:11px;color:#666;"><div style="border-top:1px solid #999;width:100px;margin:26px auto 4px;"></div>ผู้รับเงิน / Cashier</div>
+      <div style="text-align:center;font-size:11px;color:#666;"><div style="border-top:1px solid #999;width:100px;margin:26px auto 4px;"></div>ตราประทับสถานประกอบการ</div>
+    </div>
+    <div style="text-align:center;margin-top:6px;font-size:10px;color:#aaa;">${footer}</div>
+  </div>
+</div>`;
+}
+
+/* ===== BUILD FULL RECEIPT — A4 Portrait บน=ลูกค้า / ล่าง=ร้าน ===== */
+function buildR(num,plate,owner,phone,vtype,cyear,items,confirmed){
+  return`<div style="font-family:'Sarabun','TH Sarabun New',Arial,sans-serif;">
+  ${buildSlip(num,plate,owner,phone,vtype,cyear,items,confirmed,true)}
+  <div style="position:relative;margin:10px 0;display:flex;align-items:center;gap:8px;">
+    <div style="flex:1;border-top:2px dashed #bbb;"></div>
+    <div style="font-size:11px;color:#bbb;white-space:nowrap;flex-shrink:0;padding:0 4px;">✂&nbsp; ตัดตรงนี้ — ส่วนบนให้ลูกค้า / ส่วนล่างเก็บที่ร้าน &nbsp;✂</div>
+    <div style="flex:1;border-top:2px dashed #bbb;"></div>
+  </div>
+  ${buildSlip(num,plate,owner,phone,vtype,cyear,items,confirmed,false)}
+</div>`;
+}
+
+
+function showR(html){
+  document.getElementById('empty-msg').style.display='none';
+  const w=document.getElementById('rcpt-wrap');
+  w.style.display='flex';w.style.flexDirection='column';w.style.alignItems='center';
+  document.getElementById('rcpt-body').innerHTML=html;
+  w.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function preview(){
+  if(!cart.length){showToast('เลือกรายการบริการก่อน');return;}
+  const num='RCP'+String(rnum+1).padStart(5,'0');
+  showR(buildR(num,document.getElementById('plate').value||'ไม่ระบุ',document.getElementById('owner').value,document.getElementById('phone').value,document.getElementById('vtype').value,document.getElementById('cyear').value,cart,false));
+}
+
+async function confirmSale(){
+  if(!cart.length){showToast('เลือกรายการบริการก่อน');return;}
+  const btn=document.querySelector('.bp');
+  if(btn){btn.disabled=true;btn.textContent='⏳ กำลังออกบิล...';}
+  try{
+    const num=await gsGetNextBillNum();
+    const plate=document.getElementById('plate').value||'ไม่ระบุ';
+    const owner=document.getElementById('owner').value;
+    const phone=document.getElementById('phone').value;
+    const vtype=document.getElementById('vtype').value;
+    const cyear=document.getElementById('cyear').value;
+    const tot=cart.reduce((s,i)=>s+i.price,0);
+    const rec={num,date:dn(),time:tn(),plate,owner,phone,vtype,cyear,items:[...cart],total:tot};
+    hist.unshift(rec);
+    localStorage.setItem('tro_hist',JSON.stringify(hist));
+    showR(buildR(num,plate,owner,phone,vtype,cyear,cart,true));
+    autoDownload(rec);
+    // ส่งไปยัง Google Sheets (background)
+    gsSaveReceipt(rec);
+    showToast('✅ บันทึกแล้ว — '+num);
+  }catch(e){
+    showToast('เกิดข้อผิดพลาด กรุณาลองใหม่');
+  }finally{
+    if(btn){btn.disabled=false;btn.innerHTML='<i class="ti ti-receipt" style="font-size:13px;vertical-align:-2px;"></i> ออกใบเสร็จ & บันทึก';}
+  }
+}
+
+function saveAsImage(filename){
+  const el=document.getElementById('rcpt-body');
+  if(!el||!el.innerHTML){showToast('ไม่มีข้อมูลใบเสร็จ');return;}
+  showToast('กำลังสร้างไฟล์ภาพ...');
+  const orig=el.style.cssText;
+  el.style.width='595px';el.style.background='#ffffff';
+  html2canvas(el,{
+    scale:2,
+    useCORS:true,
+    allowTaint:true,
+    backgroundColor:'#ffffff',
+    logging:false,
+    width:595,
+  }).then(canvas=>{
+    el.style.cssText=orig;
+    canvas.toBlob(blob=>{
+      const a=document.createElement('a');
+      a.href=URL.createObjectURL(blob);
+      a.download=filename+'.png';
+      document.body.appendChild(a);a.click();
+      setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},500);
+      showToast('บันทึกภาพเรียบร้อย!');
+    },'image/png');
+  }).catch(e=>{
+    el.style.cssText=orig;
+    showToast('เกิดข้อผิดพลาด กรุณาลองใหม่');
+    console.warn(e);
+  });
+}
+
+function autoDownload(rec){
+  setTimeout(()=>saveAsImage('receipt_'+rec.num+'_'+rec.plate.replace(/\s/g,'')),400);
+}
+
+function dlJSON(){
+  if(!hist.length){showToast('ไม่มีข้อมูล');return;}
+  saveAsImage('receipt_'+hist[0].num+'_'+hist[0].plate.replace(/\s/g,''));
+}
+
+function dlAllJSON(){
+  if(!hist.length){showToast('ไม่มีประวัติ');return;}
+  const blob=new Blob([JSON.stringify(hist,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);a.download='tro_all_receipts.json';
+  document.body.appendChild(a);a.click();
+  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},500);
+}
+
+function dlCSV(){
+  if(!hist.length){showToast('ไม่มีประวัติ');return;}
+  const hdr='\uFEFFเลขที่ใบเสร็จ,วันที่,เวลา,ทะเบียน,ประเภท,ชื่อเจ้าของ,โทร,ปีรถ,รายการ,ยอดรวม';
+  const rows=hist.map(r=>[r.num,r.date,r.time,r.plate,r.vtype,r.owner||'',r.phone||'',r.cyear||'',r.items.map(i=>i.name).join(' | '),r.total].map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(','));
+  const blob=new Blob([hdr+'\n'+rows.join('\n')],{type:'text/csv;charset=utf-8;'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);a.download='tro_receipts.csv';
+  document.body.appendChild(a);a.click();
+  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},500);
+}
+
+function doPDF(){
+  const el=document.getElementById('rcpt-body');
+  if(!el||!el.innerHTML){showToast('ไม่มีข้อมูลใบเสร็จ');return;}
+  showToast('กำลังสร้าง PDF...');
+
+  // ขยาย el ให้เต็มก่อน capture
+  const prevW=el.style.width;
+  el.style.width='595px';
+
+  html2canvas(el,{
+    scale:2,
+    useCORS:true,
+    allowTaint:true,
+    backgroundColor:'#ffffff',
+    logging:false,
+    width:595,
+  }).then(canvas=>{
+    el.style.width=prevW;
+    const imgData=canvas.toDataURL('image/png');
+    const {jsPDF}=window.jspdf;
+    const pdf=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+    const pW=pdf.internal.pageSize.getWidth();   // 210mm
+    const pH=pdf.internal.pageSize.getHeight();  // 297mm
+    const imgW=pW;
+    const imgH=(canvas.height/canvas.width)*pW;
+    let y=0;
+    // แบ่งหน้าถ้ายาวกว่า A4
+    while(y<imgH){
+      if(y>0)pdf.addPage();
+      pdf.addImage(imgData,'PNG',0,-(y)*(pW/imgW),imgW,imgH);
+      y+=pH;
+    }
+    const plate=document.getElementById('plate').value||'receipt';
+    pdf.save('receipt_'+plate.replace(/\s/g,'')+'_'+new Date().getTime()+'.pdf');
+    showToast('บันทึก PDF เรียบร้อย! เปิดไฟล์แล้วสั่งพิมพ์ได้เลย');
+  }).catch(e=>{
+    el.style.width=prevW;
+    showToast('เกิดข้อผิดพลาด กรุณาลองใหม่');
+    console.warn(e);
+  });
+}
+
+function resetForm(){
+  cart=[];taxInCart=false;
+  ['plate','owner','phone','cyear','taxamt'].forEach(id=>{const el=document.getElementById(id);if(el){el.value='';el.disabled=false;}});
+  document.getElementById('taxbtn').textContent='+';
+  document.getElementById('taxbtn').className='tax-addbtn';
+  rSvcs();rCart();
+  document.getElementById('empty-msg').style.display='flex';
+  document.getElementById('rcpt-wrap').style.display='none';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/* ===== TABS ===== */
+function stab(t){
+  ['sale','hist','summary','taxcheck','taxdone','cfg'].forEach(x=>{
+    document.getElementById('pg-'+x).classList.toggle('on',x===t);
+    document.getElementById('tab-'+x).classList.toggle('on',x===t);
+  });
+  if(t==='hist')rHist();
+  if(t==='cfg'){loadCfg();renderComCfg();}
+  if(t==='summary')initSummaryDates();
+  if(t==='taxcheck')loadTaxCheck();
+  if(t==='taxdone')renderTaxDone();
+}
+
+/* ===== HISTORY ===== */
+function rHist(){
+  const q=(document.getElementById('hsearch').value||'').toLowerCase();
+  const el=document.getElementById('hlist');
+  const f=hist.filter(h=>h.plate.toLowerCase().includes(q)||(h.owner||'').toLowerCase().includes(q));
+  if(!f.length){el.innerHTML='<p style="color:var(--txt3);font-size:14px;text-align:center;padding:40px 0;">ยังไม่มีประวัติการออกใบเสร็จ</p>';return;}
+  el.innerHTML=f.map(h=>`
+    <div class="hist-item" onclick="viewHist('${h.num}')">
+      <div>
+        <div style="font-size:15px;font-weight:600;">${h.plate} <span style="color:var(--txt2);font-weight:400;font-size:13px;">${h.vtype}</span></div>
+        <div style="font-size:12px;color:var(--txt3);">${h.date} ${h.time}</div>
+        <div style="font-size:12px;color:var(--txt2);">${h.owner||'ไม่ระบุชื่อ'} | ${h.num}</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:16px;font-weight:700;color:var(--blue);">฿${h.total.toLocaleString()}</div>
+        <span class="badge bs-ok">เสร็จสิ้น</span>
+      </div>
+    </div>`).join('');
+}
+
+function viewHist(num){
+  const h=hist.find(r=>r.num===num);if(!h)return;
+  stab('sale');
+  document.getElementById('plate').value=h.plate;
+  document.getElementById('owner').value=h.owner||'';
+  document.getElementById('phone').value=h.phone||'';
+  document.getElementById('cyear').value=h.cyear||'';
+  cart=[...h.items];
+  taxInCart=h.items.some(i=>i.code==='TAX-AMT');
+  if(taxInCart){
+    const t=h.items.find(i=>i.code==='TAX-AMT');
+    if(t){document.getElementById('taxamt').value=t.price;document.getElementById('taxamt').disabled=true;document.getElementById('taxbtn').textContent='−';document.getElementById('taxbtn').className='tax-addbtn rm';}
+  }
+  rSvcs();rCart();
+  showR(buildR(h.num,h.plate,h.owner,h.phone,h.vtype,h.cyear,h.items,true));
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/* ===== SETTINGS ===== */
+// ต้นทุน PRB แต่ละประเภท (ยอดที่คิดคอม ไม่รวมภาษีอากร)
+const PRB_BASE={
+  'PRB-01':600,   // รย.1 คิดจาก 600 (อีก 45 คือภาษี)
+  'PRB-02':1100,  // รย.2 คิดจาก 1100
+  'PRB-03x':900,  // รย.3 คิดจาก 900
+  'PRB-03':300,   // จักรยานยนต์ — คิดจาก 300 (กลาง RVP)
+};
+// กำไรคงที่ (ไม่คิดคอม)
+const FIXED_PROFIT={'TRO-01':200,'TRO-02':60,'TAX-SVC':180};
+
+// ค่าคอมมิชชั่นบริษัท: {id: เปอร์เซ็นต์}
+let comCfg=JSON.parse(localStorage.getItem('tro_com')||'{}');
+
+function loadCfg(){
+  document.getElementById('cn').value=cfg.name||'';
+  document.getElementById('cl').value=cfg.license||'';
+  document.getElementById('ca').value=cfg.addr||'';
+  document.getElementById('ct').value=cfg.tel||'';
+  document.getElementById('cx').value=cfg.tax||'';
+}
+function saveCfg(){
+  cfg={
+    name:document.getElementById('cn').value||cfg.name,
+    license:document.getElementById('cl').value||cfg.license,
+    addr:document.getElementById('ca').value||cfg.addr,
+    tel:document.getElementById('ct').value||cfg.tel,
+    tax:document.getElementById('cx').value||cfg.tax
+  };
+  localStorage.setItem('tro_cfg',JSON.stringify(cfg));
+  showToast('บันทึกการตั้งค่าร้านเรียบร้อย');
+}
+
+function renderComCfg(){
+  document.getElementById('com-cfg-list').innerHTML=INS_COS.map(co=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);border-radius:var(--radius-sm);border:1px solid var(--border);">
+      <div style="width:36px;height:36px;border-radius:50%;background:${co.color};display:flex;align-items:center;justify-content:center;color:${co.dark?'#333':'#fff'};font-size:11px;font-weight:700;flex-shrink:0;">${co.abbr}</div>
+      <div style="flex:1;font-size:14px;font-weight:500;">${co.name}</div>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <button onclick="adjCom('${co.id}',-1)" style="width:28px;height:28px;border-radius:50%;border:1px solid var(--border2);background:#fff;cursor:pointer;font-size:16px;line-height:1;">−</button>
+        <div style="text-align:center;min-width:52px;">
+          <input type="number" id="com-${co.id}" value="${comCfg[co.id]??20}" min="0" max="100" step="0.5"
+            style="width:52px;padding:5px 4px;font-size:14px;font-weight:600;text-align:center;border:1px solid var(--border2);border-radius:var(--radius-sm);font-family:'Sarabun',sans-serif;">
+        </div>
+        <button onclick="adjCom('${co.id}',1)" style="width:28px;height:28px;border-radius:50%;border:1px solid var(--border2);background:#fff;cursor:pointer;font-size:16px;line-height:1;">+</button>
+        <span style="font-size:13px;color:var(--txt2);">%</span>
+      </div>
+    </div>`).join('');
+}
+
+function adjCom(id,delta){
+  const el=document.getElementById('com-'+id);
+  el.value=Math.max(0,Math.min(100,parseFloat(el.value||0)+delta));
+}
+
+function saveComCfg(){
+  INS_COS.forEach(co=>{
+    comCfg[co.id]=parseFloat(document.getElementById('com-'+co.id).value)||0;
+  });
+  localStorage.setItem('tro_com',JSON.stringify(comCfg));
+  showToast('บันทึกค่าคอมมิชชั่นเรียบร้อย');
+}
+
+/* ===== DATE HELPER ===== */
+function thDateToJS(thDate){
+  const months={มกราคม:0,กุมภาพันธ์:1,มีนาคม:2,เมษายน:3,พฤษภาคม:4,มิถุนายน:5,กรกฎาคม:6,สิงหาคม:7,กันยายน:8,ตุลาคม:9,พฤศจิกายน:10,ธันวาคม:11};
+  const p=thDate.split(' ');if(p.length<3)return null;
+  return new Date(parseInt(p[2])-543,months[p[1]],parseInt(p[0]));
+}
+
+/* ===== PROFIT CALC HELPER ===== */
+function calcBillProfit(items){
+  let rev=0,cost=0,profit=0;
+  const cats={inspect:{rev:0,cost:0,profit:0},prb:{rev:0,cost:0,profit:0},tax:{rev:0,cost:0,profit:0},other:{rev:0,cost:0,profit:0}};
+  items.forEach(it=>{
+    rev+=it.price;
+    if(it.code==='TRO-01'){
+      const p=FIXED_PROFIT['TRO-01'];
+      profit+=p;cats.inspect.rev+=it.price;cats.inspect.cost+=(it.price-p);cats.inspect.profit+=p;
+    } else if(it.code==='TAX-SVC'){
+      const p=FIXED_PROFIT['TAX-SVC'];
+      profit+=p;cats.tax.rev+=it.price;cats.tax.cost+=(it.price-p);cats.tax.profit+=p;
+    } else if(it.code==='TAX-AMT'){
+      cats.tax.rev+=it.price;cats.tax.cost+=it.price;// ค่าภาษีจริงไม่มีกำไร
+    } else if(it.code.startsWith('PRB-')&&PRB_BASE[it.code]!==undefined){
+      const base=PRB_BASE[it.code];
+      const insId=INS_COS.find(c=>c.name===it.ins)?.id;
+      const pct=insId?(comCfg[insId]??20):20;
+      const com=Math.round(base*pct/100*100)/100;
+      profit+=com;
+      cats.prb.rev+=it.price;cats.prb.cost+=(it.price-com);cats.prb.profit+=com;
+    } else {
+      cats.other.rev+=it.price;cats.other.cost+=it.price;
+    }
+  });
+  cost=rev-profit;
+  return{rev,cost,profit,cats};
+}
+
+/* ===== INVOICE DETAIL MODAL ===== */
+function showInvDetail(num){
+  const h=hist.find(r=>r.num===num);if(!h)return;
+  const {rev,cost,profit,cats}=calcBillProfit(h.items);
+  const catRow=(label,c,icon)=>c.rev===0?'':`
+    <tr style="border-bottom:1px solid #f0f0f0;">
+      <td style="padding:8px 10px;font-size:13px;">${icon} ${label}</td>
+      <td style="padding:8px 10px;text-align:right;font-size:13px;">฿${c.rev.toLocaleString('th',{minimumFractionDigits:2})}</td>
+      <td style="padding:8px 10px;text-align:right;font-size:13px;color:#c0392b;">฿${c.cost.toLocaleString('th',{minimumFractionDigits:2})}</td>
+      <td style="padding:8px 10px;text-align:right;font-size:13px;font-weight:700;color:#2e7d32;">฿${c.profit.toLocaleString('th',{minimumFractionDigits:2})}</td>
+    </tr>`;
+  document.getElementById('inv-modal-body').innerHTML=`
+    <div style="background:#f5f7fa;border-radius:8px;padding:12px 14px;margin-bottom:14px;">
+      <div style="font-size:14px;font-weight:700;">เลขที่ ${h.num}</div>
+      <div style="font-size:12px;color:#666;">${h.date} ${h.time} | ทะเบียน ${h.plate} (${h.vtype})</div>
+      ${h.owner?`<div style="font-size:12px;color:#666;">เจ้าของ: ${h.owner}</div>`:''}
+    </div>
+    <div style="font-size:13px;font-weight:600;color:#1a1d23;margin-bottom:6px;">รายได้แยกประเภท</div>
+    <table style="width:100%;border-collapse:collapse;background:#fff;border-radius:8px;overflow:hidden;border:1px solid #eee;margin-bottom:14px;">
+      <thead>
+        <tr style="background:#f0f4fa;">
+          <th style="padding:8px 10px;text-align:left;font-size:11px;color:#666;font-weight:600;">ประเภท</th>
+          <th style="padding:8px 10px;text-align:right;font-size:11px;color:#666;font-weight:600;">รายรับ</th>
+          <th style="padding:8px 10px;text-align:right;font-size:11px;color:#666;font-weight:600;">ต้นทุน</th>
+          <th style="padding:8px 10px;text-align:right;font-size:11px;color:#666;font-weight:600;">กำไร</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${catRow('ค่าตรวจสภาพ',cats.inspect,'🔍')}
+        ${catRow('พ.ร.บ.',cats.prb,'📋')}
+        ${catRow('ภาษี / ต่อทะเบียน',cats.tax,'🏛️')}
+        ${catRow('อื่นๆ',cats.other,'📦')}
+      </tbody>
+    </table>
+    <div style="font-size:13px;font-weight:600;color:#1a1d23;margin-bottom:6px;">รายการในบิล</div>
+    <div style="background:#fff;border:1px solid #eee;border-radius:8px;overflow:hidden;margin-bottom:14px;">
+      ${h.items.map((it,i)=>{
+        const insId=INS_COS.find(c=>c.name===it.ins)?.id;
+        const pct=insId?(comCfg[insId]??20):20;
+        const base=PRB_BASE[it.code];
+        const com=it.code.startsWith('PRB-')&&base!=null?Math.round(base*pct/100*100)/100:FIXED_PROFIT[it.code]||0;
+        return`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;${i>0?'border-top:1px dotted #eee':''}">
+          <div>
+            <div style="font-size:13px;">${it.name}${it.ins?' ('+it.ins+')':''}</div>
+            ${it.code.startsWith('PRB-')&&base!=null?`<div style="font-size:11px;color:#888;">คอม ${pct}% จาก ฿${base}</div>`:''}
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:13px;font-weight:600;">฿${it.price.toLocaleString()}</div>
+            <div style="font-size:11px;color:#2e7d32;">+฿${com.toLocaleString('th',{minimumFractionDigits:2})}</div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+    <div style="background:linear-gradient(135deg,#185FA5,#1a7ad4);border-radius:10px;padding:14px 16px;color:#fff;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+        <span style="font-size:13px;opacity:.85;">รายรับรวมบิลนี้</span>
+        <span style="font-size:14px;font-weight:700;">฿${rev.toLocaleString('th',{minimumFractionDigits:2})}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+        <span style="font-size:13px;opacity:.85;">ต้นทุนรวม</span>
+        <span style="font-size:14px;">฿${cost.toLocaleString('th',{minimumFractionDigits:2})}</span>
+      </div>
+      <div style="border-top:1px solid rgba(255,255,255,.3);padding-top:8px;display:flex;justify-content:space-between;">
+        <span style="font-size:15px;font-weight:700;">กำไรสุทธิบิลนี้</span>
+        <span style="font-size:20px;font-weight:700;color:#ffe082;">฿${profit.toLocaleString('th',{minimumFractionDigits:2})}</span>
+      </div>
+    </div>`;
+  document.getElementById('inv-modal').style.display='flex';
+}
+
+/* ===== SUMMARY ===== */
+function calcSummary(){
+  const from=document.getElementById('sum-from').value;
+  const to=document.getElementById('sum-to').value;
+  if(!from||!to){showToast('กรุณาเลือกช่วงวันที่');return;}
+  const fd=new Date(from);fd.setHours(0,0,0,0);
+  const td=new Date(to);td.setHours(23,59,59,999);
+  const filtered=hist.filter(h=>{const d=thDateToJS(h.date);return d&&d>=fd&&d<=td;});
+  if(!filtered.length){
+    document.getElementById('sum-result').innerHTML=`<div style="text-align:center;padding:40px;color:var(--txt3);">ไม่มีข้อมูลในช่วงวันที่เลือก</div>`;
+    return;
+  }
+  let totalRev=0,totalCost=0,totalProfit=0;
+  filtered.forEach(h=>{const r=calcBillProfit(h.items);totalRev+=r.rev;totalCost+=r.cost;totalProfit+=r.profit;});
+  const kpi=(label,val,color,sub='')=>`
+    <div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow);">
+      <div style="font-size:12px;color:var(--txt3);margin-bottom:4px;">${label}</div>
+      <div style="font-size:22px;font-weight:700;color:${color};">฿${val.toLocaleString('th',{minimumFractionDigits:2})}</div>
+      ${sub?`<div style="font-size:11px;color:var(--txt3);margin-top:2px;">${sub}</div>`:''}
+    </div>`;
+  const rows=filtered.map(h=>{
+    const r=calcBillProfit(h.items);
+    return`<tr style="border-bottom:1px solid #f0f0f0;cursor:pointer;" onclick="showInvDetail('${h.num}')" onmouseover="this.style.background='#f8faff'" onmouseout="this.style.background=''">
+      <td style="padding:8px 10px;">
+        <div style="font-size:13px;font-weight:600;">${h.num}</div>
+        <div style="font-size:11px;color:#888;">${h.plate}</div>
+      </td>
+      <td style="padding:8px 10px;font-size:12px;color:#666;">${h.date}<br>${h.time}</td>
+      <td style="padding:8px 10px;text-align:right;font-size:13px;font-weight:600;">฿${r.rev.toLocaleString()}</td>
+      <td style="padding:8px 10px;text-align:right;font-size:13px;color:#c0392b;">฿${r.cost.toLocaleString()}</td>
+      <td style="padding:8px 10px;text-align:right;font-size:13px;font-weight:700;color:#2e7d32;">฿${r.profit.toLocaleString()}</td>
+      <td style="padding:8px 10px;text-align:center;"><button onclick="event.stopPropagation();showInvDetail('${h.num}')" style="background:#185FA5;color:#fff;border:none;border-radius:6px;padding:5px 10px;font-size:12px;cursor:pointer;font-family:'Sarabun',sans-serif;">ดูรายละเอียด</button></td>
+    </tr>`;
+  }).join('');
+  document.getElementById('sum-result').innerHTML=`
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px;">
+      ${kpi('ยอดขายรวม (Total Revenue)',totalRev,'var(--blue)',filtered.length+' ใบเสร็จ')}
+      ${kpi('ต้นทุนรวม (Total Cost)',totalCost,'#c0392b','')}
+      ${kpi('กำไรสุทธิรวม (Net Profit)',totalProfit,'#2e7d32','')}
+    </div>
+    <div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;">
+      <div style="padding:10px 14px;background:var(--bg);font-size:12px;font-weight:700;color:var(--txt3);border-bottom:1px solid var(--border);">รายการบิลทั้งหมด</div>
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;min-width:520px;">
+          <thead><tr style="background:#f0f4fa;">
+            <th style="padding:8px 10px;text-align:left;font-size:11px;color:#666;font-weight:600;">เลขที่บิล / ทะเบียน</th>
+            <th style="padding:8px 10px;text-align:left;font-size:11px;color:#666;font-weight:600;">วันที่-เวลา</th>
+            <th style="padding:8px 10px;text-align:right;font-size:11px;color:#666;font-weight:600;">ยอดรวมบิล</th>
+            <th style="padding:8px 10px;text-align:right;font-size:11px;color:#666;font-weight:600;">ต้นทุน</th>
+            <th style="padding:8px 10px;text-align:right;font-size:11px;color:#666;font-weight:600;">กำไรบิลนี้</th>
+            <th style="padding:8px 10px;text-align:center;font-size:11px;color:#666;font-weight:600;">รายละเอียด</th>
+          </tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    </div>`;
+}
+
+/* ===== TAX CHECK STATE ===== */
+// tcState: { "num|plate" → {checked, status, taxAmt, plate, owner, phone, vtype, cyear, date, time, num} }
+let tcState=JSON.parse(localStorage.getItem('tro_tcstate')||'{}');
+
+function saveTcState(){localStorage.setItem('tro_tcstate',JSON.stringify(tcState));}
+
+function updateTaxDoneBadge(){
+  const done=Object.values(tcState).filter(s=>s.status==='done');
+  const b=document.getElementById('taxdone-badge');
+  if(b){b.style.display=done.length?'inline':'none';b.textContent=done.length;}
+}
+
+/* loadTaxCheck — ดึงรถทั้งหมดที่ไม่ใช่ done มาแสดงอัตโนมัติ */
+function loadTaxCheck(){
+  // เพิ่มรถใหม่จาก hist ที่ยังไม่มีใน tcState
+  hist.forEach(h=>{
+    const key=h.num;
+    if(!tcState[key]){
+      const taxItem=h.items.find(it=>it.code==='TAX-AMT');
+      tcState[key]={
+        checked:false,status:'none',
+        taxAmt:taxItem?taxItem.price:0,
+        plate:h.plate,owner:h.owner||'',phone:h.phone||'',
+        vtype:h.vtype,cyear:h.cyear||'',
+        date:h.date,time:h.time,num:h.num,
+        hasTaxSvc:h.items.some(it=>it.code==='TAX-SVC'||it.code==='TAX-AMT'),
+      };
+    }
+  });
+  saveTcState();
+  updateTaxDoneBadge();
+
+  // กรองเฉพาะที่ยังไม่ done
+  const active=Object.values(tcState).filter(s=>s.status!=='done');
+  renderTcList(active);
+  updateTcBar();
+}
+
+function taxCheck(){
+  const q=(document.getElementById('tc-search').value||'').trim().toLowerCase();
+  // กรองจาก tcState ที่ไม่ใช่ done
+  const active=Object.values(tcState).filter(s=>s.status!=='done');
+  const filtered=q?active.filter(s=>s.plate.toLowerCase().includes(q)||(s.owner||'').toLowerCase().includes(q)):active;
+  renderTcList(filtered);
+  updateTcBar();
+}
+
+function renderTcList(list){
+  const el=document.getElementById('tc-result');
+  if(!list.length){
+    el.innerHTML=`<div style="text-align:center;padding:32px;color:var(--txt3);background:#fff;border:1px solid var(--border);border-radius:var(--radius);">
+      <i class="ti ti-check" style="font-size:40px;color:#81c784;display:block;margin-bottom:8px;"></i>
+      ไม่มีรถรอต่อภาษี หรือทุกคันต่อภาษีสำเร็จแล้ว 🎉
+    </div>`;return;
+  }
+  const STATUS_CFG={
+    none:{label:'ยังไม่ต่อภาษี',bg:'#FFF3E0',border:'#FFB74D',color:'#E65100',dot:'🔴'},
+    going:{label:'กำลังไปต่อภาษี',bg:'#E3F2FD',border:'#64B5F6',color:'#1565C0',dot:'🔵'},
+    done:{label:'ต่อภาษีแล้ว',bg:'#E8F5E9',border:'#81C784',color:'#2E7D32',dot:'🟢'},
+  };
+  el.innerHTML=list.map(s=>{
+    const sc=STATUS_CFG[s.status];
+    return`
+    <div id="tc-card-${s.num}" style="background:#fff;border:2px solid ${s.checked?sc.border:'var(--border)'};border-radius:var(--radius);padding:14px 16px;margin-bottom:10px;box-shadow:var(--shadow);transition:border-color .2s;">
+      <div style="display:flex;align-items:flex-start;gap:12px;">
+        <div style="flex-shrink:0;padding-top:3px;">
+          <input type="checkbox" id="tc-cb-${s.num}" ${s.checked?'checked':''} onchange="tcToggle('${s.num}',this.checked)"
+            style="width:20px;height:20px;cursor:pointer;accent-color:#185FA5;">
+        </div>
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:6px;">
+            <div>
+              <div style="font-size:16px;font-weight:700;color:var(--blue);">${s.plate}</div>
+              <div style="font-size:13px;color:#444;">${s.vtype}${s.cyear?' | ปีรถ '+s.cyear:''}</div>
+              <div style="font-size:12px;color:var(--txt3);">${s.owner||'ไม่ระบุชื่อ'}${s.phone?' | '+s.phone:''}</div>
+            </div>
+            ${s.hasTaxSvc?'<span class="badge bs-ok" style="flex-shrink:0;">มีประวัติต่อภาษี</span>':'<span class="badge" style="background:#f5f5f5;color:#888;flex-shrink:0;">ยังไม่ต่อ</span>'}
+          </div>
+          <div style="border-top:1px solid #eee;margin:8px 0;"></div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
+            ${['none','going','done'].map(st=>{
+              const sc2=STATUS_CFG[st];
+              const active=s.status===st;
+              return`<button onclick="tcSetStatus('${s.num}','${st}')"
+                style="padding:5px 12px;border-radius:20px;font-size:12px;font-weight:${active?'700':'400'};cursor:pointer;font-family:'Sarabun',sans-serif;
+                border:2px solid ${active?sc2.border:'#ddd'};background:${active?sc2.bg:'#f9f9f9'};color:${active?sc2.color:'#888'};transition:all .15s;">
+                ${sc2.dot} ${sc2.label}</button>`;
+            }).join('')}
+          </div>
+          <div style="display:flex;gap:14px;flex-wrap:wrap;">
+            <div><div style="font-size:10px;color:#888;">วันที่</div><div style="font-size:12px;font-weight:600;">${s.date}</div></div>
+            <div><div style="font-size:10px;color:#888;">เลขที่</div><div style="font-size:12px;">${s.num}</div></div>
+            ${s.taxAmt?`<div><div style="font-size:10px;color:#888;">ค่าภาษี</div><div style="font-size:13px;font-weight:700;color:var(--blue);">฿${s.taxAmt.toLocaleString()}</div></div>`:''}
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function tcToggle(num,checked){
+  if(tcState[num]){tcState[num].checked=checked;saveTcState();}
+  const card=document.getElementById('tc-card-'+num);
+  if(card&&tcState[num]){
+    const borders={none:'#FFB74D',going:'#64B5F6',done:'#81C784'};
+    card.style.borderColor=checked?borders[tcState[num].status]:'var(--border)';
+  }
+  updateTcBar();
+}
+
+function tcSetStatus(num,status){
+  if(!tcState[num])return;
+  tcState[num].status=status;
+  tcState[num].checked=tcState[num].checked;
+  saveTcState();
+  updateTaxDoneBadge();
+  if(status==='done'){
+    // ย้ายออกจากหน้านี้ทันที — ลบการ์ดแบบ animate
+    const card=document.getElementById('tc-card-'+num);
+    if(card){
+      card.style.transition='opacity .3s,transform .3s';
+      card.style.opacity='0';card.style.transform='translateX(40px)';
+      setTimeout(()=>{card.remove();updateTcBar();},300);
+    }
+    showToast('✅ ย้ายไปหน้าต่อภาษีสำเร็จแล้ว');
+  } else {
+    // re-render current list
+    taxCheck();
+  }
+  updateTcBar();
+}
+
+/* ===== TAX DONE PAGE ===== */
+function renderTaxDone(){
+  const done=Object.values(tcState).filter(s=>s.status==='done');
+  const el=document.getElementById('taxdone-list');
+  updateTaxDoneBadge();
+  if(!done.length){
+    el.innerHTML=`<div style="text-align:center;padding:40px;color:var(--txt3);background:#fff;border:1px solid var(--border);border-radius:var(--radius);">
+      <i class="ti ti-clipboard-check" style="font-size:48px;color:var(--border2);display:block;margin-bottom:8px;"></i>
+      ยังไม่มีรายการต่อภาษีสำเร็จ
+    </div>`;return;
+  }
+  el.innerHTML=done.map(s=>`
+    <div style="background:#fff;border:2px solid #81C784;border-radius:var(--radius);padding:14px 16px;margin-bottom:10px;box-shadow:var(--shadow);">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;">
+        <div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-size:16px;font-weight:700;color:#2e7d32;">${s.plate}</span>
+            <span style="font-size:18px;">✅</span>
+          </div>
+          <div style="font-size:13px;color:#444;">${s.vtype}${s.cyear?' | ปีรถ '+s.cyear:''}</div>
+          <div style="font-size:12px;color:var(--txt3);">${s.owner||'ไม่ระบุชื่อ'}${s.phone?' | '+s.phone:''}</div>
+        </div>
+        <div style="text-align:right;">
+          ${s.taxAmt?`<div style="font-size:15px;font-weight:700;color:#2e7d32;">฿${s.taxAmt.toLocaleString()}</div>`:''}
+          <div style="font-size:11px;color:#888;">${s.date}</div>
+        </div>
+      </div>
+      <div style="margin-top:10px;display:flex;justify-content:flex-end;">
+        <button onclick="tcUndo('${s.num}')"
+          style="font-size:12px;padding:5px 12px;background:#fff;border:1px solid #ccc;border-radius:20px;cursor:pointer;color:#666;font-family:'Sarabun',sans-serif;">
+          ↩ ย้ายกลับ
+        </button>
+      </div>
+    </div>`).join('');
+}
+
+function tcUndo(num){
+  if(tcState[num]){tcState[num].status='none';tcState[num].checked=false;saveTcState();}
+  updateTaxDoneBadge();
+  renderTaxDone();
+  showToast('ย้ายกลับรายการแล้ว');
+}
+
+function clearDone(){
+  if(!confirm('ล้างรายการต่อภาษีสำเร็จทั้งหมด?'))return;
+  Object.keys(tcState).forEach(k=>{if(tcState[k].status==='done')delete tcState[k];});
+  saveTcState();updateTaxDoneBadge();renderTaxDone();showToast('ล้างแล้ว');
+}
+
+function setToday(){
+  const d=new Date();const s=d.toISOString().slice(0,10);
+  document.getElementById('sum-from').value=s;
+  document.getElementById('sum-to').value=s;
+  calcSummary();
+}
+function setThisMonth(){
+  const d=new Date();
+  const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0');
+  const last=new Date(d.getFullYear(),d.getMonth()+1,0).getDate();
+  document.getElementById('sum-from').value=`${y}-${m}-01`;
+  document.getElementById('sum-to').value=`${y}-${m}-${last}`;
+  calcSummary();
+}
+function initSummaryDates(){
+  if(!document.getElementById('sum-from').value) setThisMonth();
+  else calcSummary();
+}
+
+function updateTcBar(){
+  const going=Object.values(tcState).filter(s=>s.checked&&s.status==='going');
+  const count=going.length;
+  const total=going.reduce((sum,s)=>sum+(s.taxAmt||0),0);
+  const bar=document.getElementById('tc-bar');
+  if(!bar)return;
+  if(count>0){
+    bar.style.display='block';
+    document.getElementById('tc-count').textContent=count;
+    document.getElementById('tc-total').textContent=total.toLocaleString('th',{minimumFractionDigits:2});
+  } else {
+    bar.style.display='none';
+  }
+}
+
+/* ===== INIT ===== */
+rSvcs();rCart();updateTaxDoneBadge();
+</script>
+</body>
+</html>
