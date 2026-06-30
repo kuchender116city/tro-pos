@@ -23,15 +23,27 @@
   body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--txt);font-size:15px;min-height:100vh;}
 
   /* ===== TOP BAR ===== */
-  .topbar{background:var(--blue);color:#fff;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(24,95,165,.3);}
-  .topbar-title{font-size:16px;font-weight:600;display:flex;align-items:center;gap:8px;}
-  .topbar-date{font-size:11px;opacity:.85;text-align:right;line-height:1.4;}
+  .topbar{background:var(--blue);color:#fff;padding:10px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(24,95,165,.3);}
+  .topbar-title{font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px;}
+  .topbar-date{font-size:11px;opacity:.85;text-align:right;line-height:1.5;}
+  @media(min-width:1024px){
+    .topbar{padding:12px 32px;}
+    .topbar-title{font-size:18px;}
+  }
 
   /* ===== NAV TABS ===== */
-  .nav{display:flex;background:var(--card);border-bottom:1px solid var(--border);overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+  .nav{display:flex;background:var(--card);border-bottom:2px solid var(--border);overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
   .nav::-webkit-scrollbar{display:none;}
-  .nb{flex:1;min-width:90px;padding:11px 8px;font-size:13px;background:none;border:none;border-bottom:3px solid transparent;cursor:pointer;color:var(--txt2);font-family:'Sarabun',sans-serif;white-space:nowrap;display:flex;align-items:center;justify-content:center;gap:5px;}
-  .nb.on{color:var(--blue);border-bottom-color:var(--blue);font-weight:600;}
+  .nb{flex:1;min-width:80px;padding:10px 8px;font-size:12px;background:none;border:none;border-bottom:3px solid transparent;margin-bottom:-2px;cursor:pointer;color:var(--txt2);font-family:'Sarabun',sans-serif;white-space:nowrap;display:flex;align-items:center;justify-content:center;gap:4px;transition:color .15s;}
+  .nb.on{color:var(--blue);border-bottom-color:var(--blue);font-weight:700;}
+  .nb:hover:not(.on){color:var(--txt);background:var(--bg);}
+  @media(min-width:600px){
+    .nb{font-size:13px;padding:11px 12px;min-width:100px;}
+  }
+  @media(min-width:1024px){
+    .nav{padding:0 20px;}
+    .nb{font-size:14px;padding:12px 18px;min-width:0;flex:none;}
+  }
 
   /* ===== LAYOUT ===== */
   .page{display:none;animation:fadein .15s ease;}
@@ -39,36 +51,52 @@
   @keyframes fadein{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
 
   /* ===== SALE PAGE ===== */
-  .sale-layout{display:flex;gap:0;}
-  @media(min-width:720px){
-    .sale-layout{display:grid;grid-template-columns:340px 1fr;}
-  }
-  .lp{background:var(--card);border-right:1px solid var(--border);}
+  /* Mobile: stack ทั้งหมดแนวตั้ง */
+  .sale-layout{display:flex;flex-direction:column;}
+  .lp{background:var(--card);border-bottom:1px solid var(--border);}
   .rp{background:var(--bg);}
 
+  /* Tablet ≥600px: 2 คอลัมน์ sidebar 320px */
+  @media(min-width:600px){
+    .sale-layout{display:grid;grid-template-columns:320px 1fr;height:calc(100vh - 98px);overflow:hidden;}
+    .lp{overflow-y:auto;border-right:1px solid var(--border);border-bottom:none;}
+    .rp{overflow-y:auto;}
+  }
+  /* Desktop ≥1024px: sidebar กว้างขึ้น 400px */
+  @media(min-width:1024px){
+    .sale-layout{grid-template-columns:420px 1fr;height:calc(100vh - 106px);}
+  }
+
   /* ===== SECTION HEADER ===== */
-  .sh{padding:9px 14px;font-size:11px;font-weight:600;color:var(--txt3);border-bottom:1px solid var(--border);background:var(--bg);text-transform:uppercase;letter-spacing:.06em;}
+  .sh{padding:8px 14px;font-size:11px;font-weight:700;color:var(--txt3);border-bottom:1px solid var(--border);background:var(--bg);text-transform:uppercase;letter-spacing:.06em;}
 
   /* ===== FORM ===== */
   .vform{padding:12px 14px;display:flex;flex-direction:column;gap:9px;border-bottom:1px solid var(--border);background:var(--card);}
   .fr{display:flex;gap:8px;}
   .fg{display:flex;flex-direction:column;gap:3px;flex:1;}
-  .fg label{font-size:11px;font-weight:600;color:var(--txt2);}
-  .fg input,.fg select{padding:8px 10px;font-size:14px;border:1px solid var(--border2);border-radius:var(--radius-sm);background:#fff;color:var(--txt);font-family:'Sarabun',sans-serif;width:100%;}
+  .fg label{font-size:11px;font-weight:700;color:var(--txt2);letter-spacing:.02em;}
+  .fg input,.fg select{padding:9px 11px;font-size:15px;border:1.5px solid var(--border2);border-radius:var(--radius-sm);background:#fff;color:var(--txt);font-family:'Sarabun',sans-serif;width:100%;transition:border-color .15s;}
   .fg input:focus,.fg select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(24,95,165,.12);}
+  @media(min-width:1024px){
+    .vform{padding:14px 18px;gap:11px;}
+    .fg input,.fg select{padding:10px 12px;font-size:15px;}
+  }
 
   /* ===== SERVICE LIST ===== */
   .slist{background:var(--card);}
   .scat{border-bottom:1px solid var(--border);}
-  .catlabel{font-size:11px;font-weight:700;color:var(--txt3);padding:8px 14px 4px;text-transform:uppercase;letter-spacing:.05em;background:var(--bg);}
-  .svcrow{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s;}
+  .catlabel{font-size:10px;font-weight:800;color:var(--txt3);padding:7px 14px 4px;text-transform:uppercase;letter-spacing:.08em;background:var(--bg);}
+  .svcrow{display:flex;align-items:center;padding:11px 14px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s;gap:10px;}
   .svcrow:last-child{border-bottom:none;}
-  .svcrow:active{background:#f0f5fb;}
+  .svcrow:hover{background:#f8fbff;}
+  .svcrow:active{background:var(--blue-lt);}
   .svcrow.sel{background:var(--blue-lt);}
-  .sn{font-size:14px;color:var(--txt);flex:1;padding-right:8px;}
-  .sp{font-size:14px;font-weight:600;color:var(--blue);white-space:nowrap;}
-  .addbtn{width:28px;height:28px;border-radius:50%;background:var(--blue-lt);border:none;cursor:pointer;color:var(--blue);font-size:18px;line-height:1;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .1s;}
-  .addbtn.rm{background:#fce8e8;color:#c0392b;}
+  .sn{font-size:14px;color:var(--txt);flex:1;line-height:1.4;}
+  .sp{font-size:14px;font-weight:700;color:var(--blue);white-space:nowrap;flex-shrink:0;min-width:60px;text-align:right;}
+  .addbtn{width:32px;height:32px;border-radius:50%;background:var(--blue-lt);border:2px solid var(--blue-bd);cursor:pointer;color:var(--blue);font-size:19px;line-height:1;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .1s;}
+  .addbtn:hover{background:var(--blue);color:#fff;}
+  .addbtn.rm{background:#fce8e8;color:#c0392b;border-color:#f5c6c6;}
+  .addbtn.rm:hover{background:#c0392b;color:#fff;}
 
   /* ===== TAX INPUT ROW ===== */
   .tax-row{padding:10px 14px;border-bottom:1px solid var(--border);background:var(--card);}
@@ -82,32 +110,37 @@
   .tax-addbtn.rm{background:#fce8e8;color:#c0392b;}
 
   /* ===== CART ===== */
-  .cart{padding:10px 14px;background:var(--card);border-top:1px solid var(--border);}
-  .ch{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
-  .ct{font-size:14px;font-weight:600;color:var(--txt);}
-  .clrbtn{font-size:13px;color:#c0392b;background:none;border:none;cursor:pointer;font-family:'Sarabun',sans-serif;}
-  .ci{display:flex;align-items:center;gap:6px;padding:6px 9px;background:var(--bg);border-radius:var(--radius-sm);margin-bottom:5px;}
-  .cin{flex:1;font-size:13px;color:var(--txt);}
-  .cip{font-size:13px;font-weight:600;color:var(--blue);}
-  .cix{background:none;border:none;cursor:pointer;color:var(--txt3);font-size:16px;line-height:1;padding:0 2px;}
+  .cart{padding:12px 14px;background:var(--card);border-top:2px solid var(--border);}
+  .ch{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+  .ct{font-size:14px;font-weight:700;color:var(--txt);}
+  .clrbtn{font-size:13px;color:#c0392b;background:none;border:none;cursor:pointer;font-family:'Sarabun',sans-serif;padding:4px 8px;}
+  .ci{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--bg);border-radius:var(--radius-sm);margin-bottom:6px;border:1px solid var(--border);}
+  .cin{flex:1;font-size:13px;color:var(--txt);line-height:1.4;word-break:break-word;}
+  .cip{font-size:13px;font-weight:700;color:var(--blue);white-space:nowrap;flex-shrink:0;}
+  .cix{background:none;border:none;cursor:pointer;color:var(--txt3);font-size:18px;line-height:1;padding:0 4px;flex-shrink:0;}
 
   /* ===== SUMMARY ===== */
-  .sumbox{margin:0 14px 10px;padding:10px 12px;background:var(--bg);border-radius:var(--radius);border:1px solid var(--border);display:flex;flex-direction:column;gap:5px;}
+  .sumbox{margin:0 14px 10px;padding:12px 14px;background:var(--blue-lt);border-radius:var(--radius);border:2px solid var(--blue-bd);display:flex;flex-direction:column;gap:5px;}
   .sr{display:flex;justify-content:space-between;font-size:13px;color:var(--txt2);}
-  .sr.tot{font-size:15px;font-weight:700;color:var(--txt);border-top:1px solid var(--border);padding-top:6px;margin-top:3px;}
+  .sr.tot{font-size:17px;font-weight:800;color:var(--blue);border-top:1px solid var(--blue-bd);padding-top:8px;margin-top:3px;}
 
   /* ===== ACTION BUTTONS ===== */
-  .actbtns{display:flex;gap:8px;padding:0 14px 14px;background:var(--card);}
-  .bp{flex:1;padding:11px;background:var(--blue);color:#fff;border:none;border-radius:var(--radius);font-size:14px;font-weight:600;cursor:pointer;font-family:'Sarabun',sans-serif;}
+  .actbtns{display:flex;gap:8px;padding:12px 14px 16px;background:var(--card);border-top:1px solid var(--border);}
+  .bp{flex:1;padding:13px;background:var(--blue);color:#fff;border:none;border-radius:var(--radius);font-size:15px;font-weight:700;cursor:pointer;font-family:'Sarabun',sans-serif;letter-spacing:.02em;transition:background .15s;}
+  .bp:hover{background:#1470c0;}
   .bp:active{background:#0e4c8a;}
-  .bs-btn{padding:11px 14px;background:#fff;color:var(--txt);border:1px solid var(--border2);border-radius:var(--radius);font-size:14px;cursor:pointer;font-family:'Sarabun',sans-serif;display:flex;align-items:center;gap:5px;}
-  .bs-btn:active{background:var(--bg);}
+  .bs-btn{padding:11px 14px;background:#fff;color:var(--txt);border:1.5px solid var(--border2);border-radius:var(--radius);font-size:14px;cursor:pointer;font-family:'Sarabun',sans-serif;display:flex;align-items:center;gap:5px;white-space:nowrap;transition:background .15s;}
+  .bs-btn:hover{background:var(--bg);}
+  .bs-btn:active{background:#e8edf3;}
 
   /* ===== RECEIPT AREA ===== */
-  .rarea{padding:16px;display:flex;flex-direction:column;align-items:center;}
-  .rctrl{display:flex;gap:8px;margin-bottom:12px;width:100%;max-width:600px;flex-wrap:wrap;}
-  .rctrl .bs-btn{flex:1;min-width:120px;justify-content:center;}
-  .empty-r{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;gap:12px;color:var(--txt3);text-align:center;}
+  .rarea{padding:20px;display:flex;flex-direction:column;align-items:center;}
+  .rctrl{display:flex;gap:8px;margin-bottom:14px;width:100%;max-width:640px;flex-wrap:wrap;}
+  .rctrl .bs-btn{flex:1;min-width:130px;justify-content:center;}
+  .empty-r{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;gap:14px;color:var(--txt3);text-align:center;}
+  @media(min-width:1024px){
+    .rarea{padding:28px 32px;}
+  }
 
   /* ===== A4 RECEIPT ===== */
   .A4{width:100%;max-width:595px;background:#ffffff;padding:16px;color:#1a1a1a;font-family:'Sarabun',sans-serif;font-size:13px;border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);}
@@ -138,21 +171,28 @@
   .rfooter{text-align:center;margin-top:10px;}
 
   /* ===== HISTORY ===== */
-  .hist-wrap{padding:16px;}
-  .hist-toolbar{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center;}
-  .hist-toolbar input{flex:1;min-width:160px;padding:9px 12px;font-size:14px;border:1px solid var(--border2);border-radius:var(--radius-sm);font-family:'Sarabun',sans-serif;background:#fff;color:var(--txt);}
-  .hist-toolbar input:focus{outline:none;border-color:var(--blue);}
-  .hexp-btns{display:flex;gap:6px;flex-wrap:wrap;}
-  .hexp-btns .bs-btn{font-size:13px;padding:8px 12px;min-width:0;flex:none;}
-  .hist-item{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:#fff;border:1px solid var(--border);border-radius:var(--radius);margin-bottom:8px;cursor:pointer;box-shadow:var(--shadow);}
+  .hist-wrap{padding:12px;}
+  .hist-toolbar{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center;}
+  .hist-toolbar input{flex:1;min-width:180px;padding:10px 12px;font-size:15px;border:1.5px solid var(--border2);border-radius:var(--radius-sm);font-family:'Sarabun',sans-serif;background:#fff;color:var(--txt);}
+  .hist-toolbar input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(24,95,165,.1);}
+  .hexp-btns{display:flex;gap:6px;}
+  .hexp-btns .bs-btn{font-size:13px;padding:9px 12px;}
+  .hist-item{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;background:#fff;border:1px solid var(--border);border-radius:var(--radius);margin-bottom:8px;cursor:pointer;box-shadow:var(--shadow);gap:12px;transition:box-shadow .15s,border-color .15s;}
+  .hist-item:hover{border-color:var(--blue-bd);box-shadow:0 2px 12px rgba(24,95,165,.1);}
   .hist-item:active{background:var(--bg);}
   .badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;}
   .bs-ok{background:var(--green-bg);color:var(--green-txt);}
+  @media(min-width:1024px){
+    .hist-wrap{padding:20px 32px;max-width:900px;margin:0 auto;}
+  }
 
   /* ===== SETTINGS ===== */
-  .cfg-wrap{padding:16px;max-width:480px;}
+  .cfg-wrap{padding:16px;max-width:560px;}
   .cfg-wrap .fg{margin-bottom:10px;}
   .cfg-wrap .fg input{padding:9px 12px;font-size:14px;}
+  @media(min-width:1024px){
+    .cfg-wrap{padding:24px 32px;max-width:640px;}
+  }
 
   /* ===== TOAST ===== */
   .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#1a1d23;color:#fff;padding:10px 20px;border-radius:30px;font-size:13px;font-weight:500;z-index:999;transition:transform .25s ease,opacity .25s;opacity:0;pointer-events:none;white-space:nowrap;}
@@ -187,7 +227,18 @@
 
 <div id="toast" class="toast"></div>
 
-<!-- ===== MODAL เลือกบริษัท พ.ร.บ. ===== -->
+<!-- ===== MODAL เลือกสาขา (ครั้งแรก) ===== -->
+<div id="branch-modal" style="display:none;position:fixed;inset:0;z-index:700;background:rgba(0,0,0,.55);align-items:center;justify-content:center;padding:16px;">
+  <div style="background:#fff;border-radius:16px;width:100%;max-width:420px;box-shadow:0 8px 40px rgba(0,0,0,.3);overflow:hidden;">
+    <div style="background:var(--blue);color:#fff;padding:18px 20px;">
+      <div style="font-size:18px;font-weight:700;">🏪 เลือกสาขาของเครื่องนี้</div>
+      <div style="font-size:12px;opacity:.9;margin-top:3px;">เลือกครั้งเดียว ระบบจะจำไว้ในเครื่องนี้ — เปลี่ยนได้ภายหลังที่หน้าตั้งค่า</div>
+    </div>
+    <div id="branch-grid" style="display:flex;flex-direction:column;gap:10px;padding:18px;"></div>
+  </div>
+</div>
+
+<!-- ===== INSURANCE COMPANY MODAL ===== -->
 <div id="ins-modal" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.45);align-items:center;justify-content:center;padding:16px;">
   <div style="background:#fff;border-radius:14px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.25);">
     <div style="padding:16px 18px 12px;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:center;">
@@ -204,22 +255,13 @@
   </div>
 </div>
 
-<!-- ===== INSURANCE COMPANY MODAL ===== -->
-<div class="modal-overlay" id="ins-modal" onclick="closeInsModal(event)">
-  <div class="modal-box">
-    <div class="modal-head">
-      <span class="modal-title">เลือกบริษัทประกันภัย พ.ร.บ.</span>
-      <button class="modal-close" onclick="closeInsModal(null)">×</button>
-    </div>
-    <div class="ins-grid" id="ins-grid"></div>
-  </div>
-</div>
-
 <div class="topbar">
-  <div class="topbar-title"><i class="ti ti-car"></i> ระบบตรวจสภาพรถ (ตรอ)</div>
+  <div class="topbar-title"><i class="ti ti-car"></i> ระบบตรวจสภาพรถ (ตรอ)
+    <span id="topbar-branch" style="font-size:11px;font-weight:600;background:rgba(255,255,255,.2);padding:3px 10px;border-radius:20px;margin-left:6px;cursor:pointer;" onclick="openBranchModal()" title="กดเพื่อเปลี่ยนสาขา"></span>
+  </div>
   <div style="text-align:right;">
     <div class="topbar-date" id="datenow"></div>
-    <div id="gs-status" style="font-size:10px;margin-top:2px;color:#ffffffaa;">🟡 กำลังเชื่อมต่อ...</div>
+    <div id="gs-status" style="font-size:10px;margin-top:2px;color:#ffffffaa;cursor:pointer;" onclick="manualSync()" title="กดเพื่อ sync ทันที">🟡 กำลังเชื่อมต่อ...</div>
   </div>
 </div>
 
@@ -242,7 +284,7 @@
         <div class="fr">
           <div class="fg" style="flex:2;">
             <label>ทะเบียนรถ *</label>
-            <input id="plate" placeholder="กข 1234 กทม." style="text-transform:uppercase;">
+            <input id="plate" placeholder="กข 1234 กทม." style="text-transform:uppercase;" oninput="autofillFromPlate()">
           </div>
           <div class="fg">
             <label>ประเภทรถ</label>
@@ -255,6 +297,7 @@
             </select>
           </div>
         </div>
+        <div id="autofill-hint" style="display:none;align-items:center;gap:8px;background:var(--blue-lt);border:1px solid var(--blue-bd);border-radius:var(--radius-sm);padding:7px 10px;font-size:12px;color:var(--txt);"></div>
         <div class="fg">
           <label>ชื่อเจ้าของ / ผู้นำรถเข้า</label>
           <input id="owner" placeholder="ชื่อ-นามสกุล">
@@ -322,12 +365,30 @@
 <!-- ===== HISTORY PAGE ===== -->
 <div id="pg-hist" class="page">
   <div class="hist-wrap">
+    <!-- Realtime sync bar -->
+    <div id="hist-sync-bar" style="display:flex;align-items:center;justify-content:space-between;background:#E6F1FB;border:1px solid var(--blue-bd);border-radius:var(--radius-sm);padding:8px 12px;margin-bottom:10px;gap:8px;">
+      <div style="font-size:12px;color:var(--blue);display:flex;align-items:center;gap:5px;">
+        <span id="hist-sync-dot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#999;flex-shrink:0;"></span>
+        <span id="hist-sync-label">กำลังโหลด...</span>
+      </div>
+      <button onclick="manualSync()" style="font-size:12px;padding:5px 12px;background:var(--blue);color:#fff;border:none;border-radius:20px;cursor:pointer;font-family:'Sarabun',sans-serif;white-space:nowrap;display:flex;align-items:center;gap:4px;">
+        <i class="ti ti-refresh" style="font-size:12px;"></i> ซิงค์
+      </button>
+    </div>
     <div class="hist-toolbar">
-      <input type="text" id="hsearch" placeholder="ค้นหาทะเบียน / ชื่อ..." oninput="rHist()">
+      <input type="text" id="hsearch" placeholder="🔍 ค้นหาทะเบียน / ชื่อ..." oninput="rHist()">
+      <select id="hbranch" onchange="branchFilter=this.value;syncBranchFilters();rHist()" style="padding:10px 12px;font-size:14px;border:1.5px solid var(--border2);border-radius:var(--radius-sm);font-family:'Sarabun',sans-serif;background:#fff;color:var(--txt);cursor:pointer;">
+        <option value="all">ทุกสาขา</option>
+      </select>
       <div class="hexp-btns">
         <button class="bs-btn" onclick="dlAllJSON()"><i class="ti ti-database-export"></i> JSON</button>
         <button class="bs-btn" onclick="dlCSV()"><i class="ti ti-file-spreadsheet"></i> CSV</button>
       </div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:flex-end;margin-bottom:12px;flex-wrap:wrap;">
+      <div class="fg" style="min-width:120px;max-width:160px;"><label style="font-size:11px;color:var(--txt2);font-weight:600;">จากวันที่</label><input type="date" id="hist-from" onchange="rHist()" style="padding:8px 10px;font-size:13px;border:1px solid var(--border2);border-radius:var(--radius-sm);font-family:'Sarabun',sans-serif;background:#fff;color:var(--txt);width:100%;"></div>
+      <div class="fg" style="min-width:120px;max-width:160px;"><label style="font-size:11px;color:var(--txt2);font-weight:600;">ถึงวันที่</label><input type="date" id="hist-to" onchange="rHist()" style="padding:8px 10px;font-size:13px;border:1px solid var(--border2);border-radius:var(--radius-sm);font-family:'Sarabun',sans-serif;background:#fff;color:var(--txt);width:100%;"></div>
+      <button class="bs-btn" onclick="clearHistDates()" style="font-size:13px;">ล้างวันที่</button>
     </div>
     <div id="hlist"></div>
   </div>
@@ -335,11 +396,26 @@
 
 <!-- ===== SUMMARY PAGE ===== -->
 <div id="pg-summary" class="page">
-  <div style="padding:16px;">
-    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px;">
-      <div class="fg" style="min-width:130px;"><label>วันที่เริ่ม</label><input type="date" id="sum-from" style="padding:8px 10px;font-size:13px;border:1px solid var(--border2);border-radius:var(--radius-sm);font-family:'Sarabun',sans-serif;background:#fff;color:var(--txt);width:100%;"></div>
-      <div class="fg" style="min-width:130px;"><label>วันที่สิ้นสุด</label><input type="date" id="sum-to" style="padding:8px 10px;font-size:13px;border:1px solid var(--border2);border-radius:var(--radius-sm);font-family:'Sarabun',sans-serif;background:#fff;color:var(--txt);width:100%;"></div>
-      <button class="bp" onclick="calcSummary()" style="padding:9px 18px;width:auto;"><i class="ti ti-calculator" style="font-size:13px;vertical-align:-2px;"></i> คำนวณ</button>
+  <div style="padding:12px;max-width:1100px;margin:0 auto;">
+    <!-- Realtime sync bar -->
+    <div id="sum-sync-bar" style="display:flex;align-items:center;justify-content:space-between;background:#E6F1FB;border:1px solid var(--blue-bd);border-radius:var(--radius-sm);padding:8px 12px;margin-bottom:12px;gap:8px;">
+      <div style="font-size:12px;color:var(--blue);display:flex;align-items:center;gap:5px;">
+        <span id="sum-sync-dot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#999;flex-shrink:0;"></span>
+        <span id="sum-sync-label">กำลังโหลด...</span>
+      </div>
+      <button onclick="manualSync()" style="font-size:12px;padding:4px 10px;background:var(--blue);color:#fff;border:none;border-radius:20px;cursor:pointer;font-family:'Sarabun',sans-serif;white-space:nowrap;display:flex;align-items:center;gap:4px;">
+        <i class="ti ti-refresh" style="font-size:12px;"></i> ซิงค์
+      </button>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-bottom:12px;">
+      <div class="fg" style="min-width:130px;max-width:180px;"><label>วันที่เริ่ม</label><input type="date" id="sum-from" style="padding:9px 10px;font-size:14px;border:1px solid var(--border2);border-radius:var(--radius-sm);font-family:'Sarabun',sans-serif;background:#fff;color:var(--txt);width:100%;"></div>
+      <div class="fg" style="min-width:130px;max-width:180px;"><label>วันที่สิ้นสุด</label><input type="date" id="sum-to" style="padding:9px 10px;font-size:14px;border:1px solid var(--border2);border-radius:var(--radius-sm);font-family:'Sarabun',sans-serif;background:#fff;color:var(--txt);width:100%;"></div>
+      <div class="fg" style="min-width:130px;max-width:180px;"><label>สาขา</label>
+        <select id="sumbranch" onchange="branchFilter=this.value;syncBranchFilters();calcSummary()" style="padding:9px 10px;font-size:14px;border:1px solid var(--border2);border-radius:var(--radius-sm);font-family:'Sarabun',sans-serif;background:#fff;color:var(--txt);width:100%;cursor:pointer;">
+          <option value="all">ทุกสาขา</option>
+        </select>
+      </div>
+      <button class="bp" onclick="calcSummary()" style="padding:10px 20px;width:auto;font-size:14px;"><i class="ti ti-calculator" style="font-size:13px;vertical-align:-2px;"></i> คำนวณ</button>
       <button class="bs-btn" onclick="setToday()">วันนี้</button>
       <button class="bs-btn" onclick="setThisMonth()">เดือนนี้</button>
     </div>
@@ -391,6 +467,16 @@
 <div id="pg-cfg" class="page">
   <div class="cfg-wrap" style="max-width:600px;">
     <div style="font-size:16px;font-weight:600;margin-bottom:14px;color:var(--txt);">ตั้งค่าข้อมูล ตรอ</div>
+
+    <!-- สาขาของเครื่องนี้ -->
+    <div style="background:var(--blue-lt);border:1px solid var(--blue-bd);border-radius:var(--radius);padding:12px 14px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+      <div>
+        <div style="font-size:12px;color:var(--txt2);font-weight:600;">🏪 สาขาของเครื่องนี้</div>
+        <div id="cfg-branch-name" style="font-size:16px;font-weight:700;color:var(--blue);margin-top:2px;">-</div>
+      </div>
+      <button class="bs-btn" onclick="openBranchModal()" style="border-color:var(--blue);color:var(--blue);"><i class="ti ti-switch-horizontal"></i> เปลี่ยนสาขา</button>
+    </div>
+
     <div class="fg"><label>ชื่อสถานประกอบการ</label><input id="cn" placeholder="บริษัท/ร้าน..."></div>
     <div class="fg"><label>เลขที่ใบอนุญาต ตรอ</label><input id="cl" placeholder="ตรอ.xx-xxxx"></div>
     <div class="fg"><label>ที่อยู่</label><input id="ca" placeholder="เลขที่ ถนน ตำบล อำเภอ จังหวัด รหัสไปรษณีย์"></div>
@@ -409,7 +495,7 @@
     <div style="padding:12px 14px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:10px;">
       <div id="gs-status-cfg" style="font-size:13px;font-weight:500;margin-bottom:8px;">กำลังตรวจสอบ...</div>
       <div id="offline-badge" style="display:none;font-size:12px;color:#e65100;margin-bottom:6px;"></div>
-      <div style="font-size:12px;color:var(--txt3);margin-bottom:4px;">🔄 Auto-refresh ทุก 60 วินาที</div>
+      <div style="font-size:12px;color:var(--txt3);margin-bottom:4px;">🔄 Auto-refresh อัตโนมัติ — ปรับความถี่ตามการใช้งาน (กำลังใช้ = ทุก 5 วิ, เปิดค้าง = ทุก 10 นาที)</div>
       <div style="font-size:12px;color:var(--txt3);">📴 โหมดออฟไลน์: บิลที่ออกระหว่างเน็ตขาดจะ sync อัตโนมัติเมื่อออนไลน์</div>
       <div style="font-size:11px;color:#888;margin-top:6px;">⚠️ หาก Apps Script ยังไม่รองรับ JSONP ให้อัปเดตโค้ดตาม <a href="#" onclick="showGasNote();return false;" style="color:#185FA5;">คำแนะนำนี้</a></div>
     </div>
@@ -421,6 +507,17 @@
         <i class="ti ti-upload" style="font-size:13px;vertical-align:-2px;"></i> Upload บิลค้าง
       </button>
     </div>
+  </div>
+</div>
+
+<!-- ===== BILL ACTIONS MODAL (ดู/แก้ไข/ยกเลิก) ===== -->
+<div id="billact-modal" style="display:none;position:fixed;inset:0;z-index:650;background:rgba(0,0,0,.5);align-items:center;justify-content:center;padding:16px;">
+  <div style="background:#fff;border-radius:14px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.3);">
+    <div style="padding:14px 18px 10px;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:#fff;z-index:1;">
+      <div style="font-size:15px;font-weight:700;color:#1a1d23;">จัดการบิล</div>
+      <button onclick="closeBillActions()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#888;">×</button>
+    </div>
+    <div id="billact-body" style="padding:16px;"></div>
   </div>
 </div>
 
@@ -478,7 +575,27 @@ let hist=JSON.parse(localStorage.getItem('tro_hist')||'[]');
 let cfg=JSON.parse(localStorage.getItem('tro_cfg')||'{"name":"สถานตรวจสภาพรถ XXX","license":"ตรอ.00-0000","addr":"123 ถนน... กรุงเทพฯ 10000","tel":"02-xxx-xxxx","tax":"x-xxxx-xxxxx-xx-x"}');
 
 /* ===== GOOGLE SHEETS SYNC ===== */
-const GAS_URL='https://script.google.com/macros/s/AKfycbxtjQhmzm5X1Ba8674fWLrJDJS1dYdieztWoR9Cv0OF8OFtgNcko3HDnakQJz0Y9fA/exec';
+const GAS_URL='https://script.google.com/macros/s/AKfycbyLXcLBfaR7SdQc_PLa02aOwSrMlBjWV1I1pexSdMhHIotlKHnhhTzfpIe1wrQ6ikqf/exec';
+
+/* ===== SECRET KEY — ต้องตรงกับใน Apps Script =====
+   เปลี่ยนเป็นค่าลับของคุณเอง (อะไรก็ได้ที่เดายาก) แล้วใส่ค่าเดียวกันใน Apps Script */
+const API_SECRET='kuchender116';
+
+/* ===== BRANCH (สาขา) =====
+   แต่ละเครื่องเลือกสาขาตอนเปิดครั้งแรก เก็บไว้ใน localStorage ของเครื่องนั้น */
+const BRANCHES=[
+  {code:'BR1', name:'สาขา 1'},
+  {code:'BR2', name:'สาขา 2'},
+  {code:'BR3', name:'สาขา 3'},
+];
+let branch=JSON.parse(localStorage.getItem('tro_branch')||'null'); // {code,name}
+let branchFilter='all'; // 'all' = ทุกสาขา, หรือรหัสสาขา — ใช้กรองหน้าประวัติ/สรุปยอด
+
+function getBranchName(code){
+  const b=BRANCHES.find(x=>x.code===code);
+  return b?b.name:(code||'ไม่ระบุสาขา');
+}
+
 let gsOnline=false;
 let offlineQueue=JSON.parse(localStorage.getItem('tro_offline_queue')||'[]');
 
@@ -486,7 +603,8 @@ function saveQueue(){localStorage.setItem('tro_offline_queue',JSON.stringify(off
 
 function gsStatus(ok,msg=''){
   gsOnline=ok;
-  const label=ok?'🟢 Sheets: เชื่อมต่อแล้ว':'🔴 Sheets: '+(msg||'ออฟไลน์');
+  if(ok)lastSyncedAt=Date.now();
+  const label=ok?'🟢 Sheets: sync '+formatSyncTime(lastSyncedAt):'🔴 Sheets: '+(msg||'ออฟไลน์');
   const color=ok?'#a5d6a7':'#ef9a9a';
   const el=document.getElementById('gs-status');
   if(el){el.textContent=label;el.style.color=color;}
@@ -499,6 +617,7 @@ function gsStatus(ok,msg=''){
     el2.style.color=ok?'#2e7d32':'#c0392b';
   }
   updateQueueBadge();
+  updateSyncBars(ok);
 }
 
 function updateQueueBadge(){
@@ -511,11 +630,12 @@ function updateQueueBadge(){
 
 /* ดึงเลขบิล — ถ้าออฟไลน์ใช้เลขเครื่องตัวเอง */
 async function gsGetNextBillNum(){
+  const brCode=branch?branch.code:'XX';
   if(!navigator.onLine) return localNextBillNum();
   for(let attempt=1;attempt<=3;attempt++){
     try{
       if(attempt>1) await new Promise(r=>setTimeout(r,Math.random()*500+200));
-      const d=await jsonpGet('getNextBillNum',6000);
+      const d=await jsonpGet('getNextBillNum&branch='+brCode,6000);
       if(d&&d.num){gsStatus(true);return d.num;}
       throw new Error('no num');
     }catch(e){
@@ -529,39 +649,85 @@ async function gsGetNextBillNum(){
 }
 
 function localNextBillNum(){
+  const brCode=branch?branch.code:'XX';
   rnum++;localStorage.setItem('tro_rnum',rnum);
-  return'RCP-L'+String(rnum).padStart(5,'0');
+  // เลขออฟไลน์มี L กำกับ + รหัสสาขา กันชนกับเลขจาก Sheets และเลขสาขาอื่น
+  return'RCP-'+brCode+'-L'+String(rnum).padStart(5,'0');
 }
 
-/* บันทึกใบเสร็จ — ใช้ no-cors POST */
+/* บันทึกใบเสร็จ — พยายามอ่านผลจริง (CORS) ถ้าไม่ได้ค่อย fallback */
 async function gsSaveReceipt(rec){
-  const {profit}=calcBillProfit(rec.items,rec);
-  const cost=rec.total-profit;
-  const payload={
-    action:'saveReceipt',
-    num:rec.num,date:rec.date,time:rec.time,
-    plate:rec.plate,vtype:rec.vtype,owner:rec.owner||'',
-    phone:rec.phone||'',cyear:rec.cyear||'',
-    items:rec.items.map(i=>i.name+(i.ins?' ('+i.ins+')':'')).join(', '),
-    total:rec.total,cost,profit
-  };
+  const payload=buildReceiptPayload(rec);
   if(!navigator.onLine){
     offlineQueue.push(payload);saveQueue();
     gsStatus(false,'ออฟไลน์ — บันทึกไว้ในเครื่อง');return;
   }
   try{
-    // ใช้ no-cors เพื่อหลีกเลี่ยงปัญหา CORS จาก file://
-    await fetch(GAS_URL,{
+    // พยายามแบบอ่าน response ได้ก่อน (ใช้ได้เมื่อรันบน https เช่น GitHub Pages)
+    const res=await fetch(GAS_URL,{
       method:'POST',
-      mode:'no-cors',
-      headers:{'Content-Type':'text/plain'},
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
       body:JSON.stringify(payload)
     });
-    gsStatus(true);
+    const out=await res.json();
+    if(out&&out.ok){
+      gsStatus(true);
+      markReceiptSynced(rec.num);
+      // อัปเดตวันที่/เวลาให้ตรงกับที่ server ประทับ (กันเครื่องตั้งเวลาเพี้ยน)
+      if(out.date||out.time){
+        const h=hist.find(r=>r.num===rec.num);
+        if(h){
+          if(out.date)h.date=out.date;
+          if(out.time)h.time=out.time;
+          localStorage.setItem('tro_hist',JSON.stringify(hist));
+        }
+      }
+    } else {
+      // server ตอบกลับแต่ไม่ ok (เช่น secret ผิด) — เก็บรอ sync แต่เตือน
+      offlineQueue.push(payload);saveQueue();
+      gsStatus(false,'บันทึกถูกปฏิเสธ: '+((out&&out.error)||'ไม่ทราบสาเหตุ'));
+    }
   }catch(e){
-    offlineQueue.push(payload);saveQueue();
-    gsStatus(false,'บันทึกไม่ได้ — เก็บรอ sync');
+    // อ่าน response ไม่ได้ (CORS/เน็ต) → ลองแบบ no-cors เป็น fallback
+    try{
+      await fetch(GAS_URL,{
+        method:'POST',mode:'no-cors',
+        headers:{'Content-Type':'text/plain'},
+        body:JSON.stringify(payload)
+      });
+      // no-cors อ่านผลไม่ได้ — ให้ gsFetchReceipts รอบถัดไปยืนยันแทน
+      gsStatus(true);
+    }catch(e2){
+      offlineQueue.push(payload);saveQueue();
+      gsStatus(false,'บันทึกไม่ได้ — เก็บรอ sync');
+    }
   }
+}
+
+/* สร้าง payload สำหรับบันทึกบิล (ใช้ร่วมกันทั้ง save และ queue) */
+function buildReceiptPayload(rec){
+  const {profit}=calcBillProfit(rec.items,rec);
+  const cost=rec.total-profit;
+  const taxItem=rec.items.find(i=>i.code==='TAX-AMT');
+  return{
+    action:'saveReceipt',
+    secret:API_SECRET,
+    branch:rec.branch||(branch?branch.code:''),
+    branchName:rec.branchName||(branch?branch.name:''),
+    num:rec.num,date:rec.date,time:rec.time,
+    plate:rec.plate,vtype:rec.vtype,owner:rec.owner||'',
+    phone:rec.phone||'',cyear:rec.cyear||'',
+    items:rec.items.map(i=>i.name+(i.ins?' ('+i.ins+')':'')).join(', '),
+    taxAmt:taxItem?taxItem.price:0,
+    total:rec.total,cost,profit,
+    offlineNum:rec._offline?rec.num:''  // ถ้าเป็นบิลออฟไลน์ ส่งเลข L เดิมไปด้วย เพื่อให้ server ออกเลขจริงแทน
+  };
+}
+
+/* ทำเครื่องหมายว่าบิลนี้ขึ้น Sheets แล้ว */
+function markReceiptSynced(num){
+  const h=hist.find(r=>r.num===num);
+  if(h){h._synced=true;localStorage.setItem('tro_hist',JSON.stringify(hist));}
 }
 
 /* JSONP helper — หลีกเลี่ยง CORS สำหรับ GET */
@@ -589,7 +755,7 @@ function jsonpGet(action,timeout=8000){
   });
 }
 
-/* Auto-sync คิวที่ค้างเมื่อออนไลน์ */
+/* Auto-sync คิวที่ค้างเมื่อออนไลน์ — รับเลขจริงกลับมาแทนเลข L */
 async function gsSyncQueue(){
   if(offlineQueue.length===0)return;
   if(!navigator.onLine)return;
@@ -597,17 +763,46 @@ async function gsSyncQueue(){
   let sent=0;
   for(const payload of pending){
     try{
-      await fetch(GAS_URL,{
-        method:'POST',mode:'no-cors',
-        headers:{'Content-Type':'text/plain'},
+      const res=await fetch(GAS_URL,{
+        method:'POST',
+        headers:{'Content-Type':'text/plain;charset=utf-8'},
         body:JSON.stringify(payload)
       });
-      offlineQueue.shift();saveQueue();sent++;
-    }catch(e){break;}
+      const out=await res.json();
+      if(out&&out.ok){
+        // ถ้า server ออกเลขจริงแทนเลขออฟไลน์ → อัปเดตในประวัติ
+        if(out.realNum&&payload.offlineNum){
+          replaceBillNum(payload.offlineNum,out.realNum);
+        } else {
+          markReceiptSynced(payload.num);
+        }
+        offlineQueue.shift();saveQueue();sent++;
+      } else {
+        break; // server reject — หยุดไว้ก่อน
+      }
+    }catch(e){
+      // อ่าน response ไม่ได้ → fallback no-cors (อย่างน้อยส่งขึ้นไป)
+      try{
+        await fetch(GAS_URL,{method:'POST',mode:'no-cors',
+          headers:{'Content-Type':'text/plain'},body:JSON.stringify(payload)});
+        offlineQueue.shift();saveQueue();sent++;
+      }catch(e2){break;}
+    }
   }
   if(sent>0){
     showToast('✅ Sync '+sent+' บิลขึ้น Google Sheets แล้ว');
     gsStatus(true);
+    if(document.getElementById('pg-hist')?.classList.contains('on'))rHist();
+  }
+}
+
+/* แทนที่เลขบิลออฟไลน์ (L) ด้วยเลขจริงจาก Sheets */
+function replaceBillNum(oldNum,newNum){
+  const h=hist.find(r=>r.num===oldNum);
+  if(h){
+    h.num=newNum;h._offline=false;h._synced=true;
+    delete h._offline;
+    localStorage.setItem('tro_hist',JSON.stringify(hist));
   }
 }
 
@@ -626,24 +821,44 @@ async function gsFetchReceipts(){
           num,date:r['วันที่'],time:r['เวลา'],
           plate:r['ทะเบียน'],vtype:r['ประเภท'],
           owner:r['ชื่อเจ้าของ'],phone:r['โทร'],cyear:r['ปีรถ'],
+          branch:r['สาขา']||'',branchName:r['ชื่อสาขา']||r['สาขา']||'',
           items:[{code:'_gs',name:r['รายการ'],price:parseFloat(r['ยอดรวม'])||0}],
           total:parseFloat(r['ยอดรวม'])||0,
           _cost:parseFloat(r['ต้นทุน'])||0,
           _profit:parseFloat(r['กำไร'])||0,
-          _fromSheets:true
+          _taxAmt:parseFloat(r['ค่าภาษี'])||0,
+          _void:String(r['ยกเลิก']||'')==='1'||r['ยกเลิก']===1,
+          _ts:r['timestamp']||'',
+          _fromSheets:true,_synced:true
         };
+      });
+      // เก็บ local void ที่ยังไม่ขึ้น Sheets ไว้ (กัน void ที่เพิ่งกดหายตอน merge)
+      const localVoidQueued=offlineQueue.filter(p=>p.action==='voidReceipt');
+      hist.forEach(h=>{
+        if(h._void&&sheetsMap[h.num]&&!sheetsMap[h.num]._void){
+          // ถ้า local void แต่ Sheets ยังไม่ void — เก็บ local ไว้ก่อน ถ้ายังค้างในคิว
+          if(localVoidQueued.some(p=>p.num===h.num)){
+            sheetsMap[h.num]._void=true;
+          }
+        }
       });
       // local-only records (ออฟไลน์บิล ยังไม่ sync)
       const localOnly=hist.filter(h=>h._fromSheets!==true&&!sheetsMap[h.num]);
-      // รวม Sheets + local offline
+      // รวม Sheets + local offline — เรียงตาม timestamp ถ้ามี ไม่งั้นใช้เลขบิล
       const merged=[...Object.values(sheetsMap),...localOnly]
-        .sort((a,b)=>b.num.localeCompare(a.num));
+        .sort((a,b)=>{
+          if(a._ts&&b._ts)return b._ts.localeCompare(a._ts);
+          return b.num.localeCompare(a.num);
+        });
       hist=merged;
       localStorage.setItem('tro_hist',JSON.stringify(hist));
       gsStatus(true);
-      // refresh หน้าที่กำลังดูอยู่
-      if(document.getElementById('pg-hist').classList.contains('on'))rHist();
-      if(document.getElementById('pg-summary').classList.contains('on'))calcSummary();
+      // refresh หน้าที่กำลังดูอยู่ (silent — ไม่ขัด UX)
+      // หมายเหตุ: ไม่ auto-render หน้า taxcheck/taxdone จาก polling
+      // เพราะผู้ใช้กำลัง interact (ติ๊ก/เปลี่ยนสถานะ/ล้าง) การ re-render จะทำให้การ์ดกระพริบหรือเด้ง
+      const activePage=['hist','summary'].find(x=>document.getElementById('pg-'+x)?.classList.contains('on'));
+      if(activePage==='hist')rHist();
+      if(activePage==='summary')calcSummary();
       await gsSyncQueue();
     }
   }catch(e){
@@ -660,10 +875,123 @@ window.addEventListener('offline', ()=>{
   gsStatus(false,'เน็ตขาด');showToast('📴 ออฟไลน์ — บันทึกในเครื่องไว้ก่อน');
 });
 
-// Auto-refresh ทุก 15 วินาที (realtime หลายเครื่อง)
-setInterval(gsFetchReceipts, 15000);
+let lastSyncedAt=null;
+let syncTimer=null;
+
+function formatSyncTime(d){
+  if(!d)return'ยังไม่ได้ sync';
+  const sec=Math.round((Date.now()-d)/1000);
+  if(sec<5)return'เมื่อกี้';
+  if(sec<60)return sec+' วินาทีที่แล้ว';
+  const min=Math.floor(sec/60);
+  return min+' นาทีที่แล้ว';
+}
+
+function updateSyncBars(ok){
+  const dot=ok?'#4caf50':'#f44336';
+  let mode='';
+  // guard: polling vars (const/let) อาจยังอยู่ใน TDZ ตอนโหลดช่วงแรก
+  try{
+    if(ok&&pollTimer){
+      mode=currentPollRate===POLL_ACTIVE?' · กำลังใช้งาน':(currentPollRate===POLL_IDLE?' · โหมดประหยัด':'');
+    }
+  }catch(e){mode='';}
+  const label=ok
+    ?'🟢 ข้อมูลล่าสุด — sync '+formatSyncTime(lastSyncedAt)+mode
+    :'🔴 ออฟไลน์ — ข้อมูลในเครื่องนี้เท่านั้น';
+  ['hist','sum'].forEach(p=>{
+    const d=document.getElementById(p+'-sync-dot');
+    const l=document.getElementById(p+'-sync-label');
+    if(d)d.style.background=dot;
+    if(l)l.textContent=label;
+  });
+}
+
+// อัปเดต label ทุก 10 วิ โดยไม่ต้องเรียก API
+setInterval(()=>{
+  if(lastSyncedAt)updateSyncBars(gsOnline);
+},10000);
+
+async function manualSync(){
+  showToast('🔄 กำลัง sync...');
+  await gsFetchReceipts();
+  // refresh หน้าปัจจุบัน
+  const cur=['hist','summary','taxcheck'].find(x=>document.getElementById('pg-'+x)?.classList.contains('on'));
+  if(cur==='hist')rHist();
+  if(cur==='summary')calcSummary();
+  if(cur==='taxcheck')loadTaxCheck();
+}
+
+/* ===== ADAPTIVE POLLING (ปรับความถี่ตามการใช้งาน) =====
+   - กำลังใช้งานจริง (แตะ/คลิก/พิมพ์ภายใน 2 นาที) → ถามทุก 5 วิ
+   - เปิดค้างไว้เฉยๆ (ไม่แตะเกิน 2 นาที)            → ถามทุก 10 นาที
+   - สลับแท็บ / ย่อจอ / ปิด                          → หยุดถาม
+*/
+const POLL_ACTIVE = 5000;        // 5 วินาที ตอนกำลังใช้งาน
+const POLL_IDLE   = 600000;      // 10 นาที ตอนเปิดค้างไว้เฉยๆ
+const IDLE_AFTER  = 120000;      // ถือว่า "นิ่ง" เมื่อไม่แตะเกิน 2 นาที
+
+let pollTimer=null;
+let currentPollRate=null;
+let lastActivity=Date.now();
+
+/* เริ่ม/เปลี่ยน polling ตามอัตราที่ต้องการ */
+function setPolling(rate){
+  if(currentPollRate===rate&&pollTimer)return; // อัตราเดิมอยู่แล้ว ไม่ต้องทำซ้ำ
+  if(pollTimer)clearInterval(pollTimer);
+  currentPollRate=rate;
+  pollTimer=setInterval(()=>{
+    if(document.visibilityState!=='visible'){stopPolling();return;}
+    gsFetchReceipts();
+    // หลัง fetch แต่ละครั้ง เช็คว่าควรสลับโหมดไหม
+    evaluatePollRate();
+  },rate);
+}
+
+function stopPolling(){
+  if(pollTimer){clearInterval(pollTimer);pollTimer=null;currentPollRate=null;}
+}
+
+/* ตัดสินใจว่าควรถี่หรือช้า ตามว่าผู้ใช้แตะล่าสุดเมื่อไหร่ */
+function evaluatePollRate(){
+  if(document.visibilityState!=='visible'){stopPolling();return;}
+  const idle=Date.now()-lastActivity;
+  if(idle<IDLE_AFTER){
+    setPolling(POLL_ACTIVE);   // เพิ่งแตะ → ถี่
+  } else {
+    setPolling(POLL_IDLE);     // นิ่งนาน → ช้า ประหยัด
+  }
+}
+
+/* จับ "การใช้งาน" — แตะ/คลิก/พิมพ์/เลื่อน */
+function markActivity(){
+  const wasIdle=(Date.now()-lastActivity)>=IDLE_AFTER;
+  lastActivity=Date.now();
+  // ถ้าเพิ่งกลับมาใช้งานหลังนิ่งนาน → sync ทันที 1 ครั้ง + กลับมาถี่
+  if(wasIdle&&document.visibilityState==='visible'){
+    gsFetchReceipts();
+    setPolling(POLL_ACTIVE);
+  }
+}
+['click','keydown','touchstart','mousemove','scroll'].forEach(ev=>{
+  document.addEventListener(ev,markActivity,{passive:true});
+});
+
+/* สลับแท็บ/ย่อจอ → หยุด, กลับมา → sync ทันที + เริ่มถี่ */
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='visible'){
+    lastActivity=Date.now();
+    gsFetchReceipts();
+    setPolling(POLL_ACTIVE);
+  } else {
+    stopPolling();
+  }
+});
+
+// เริ่มต้น
+evaluatePollRate();
 // เชื่อมต่อครั้งแรก
-setTimeout(gsFetchReceipts, 1500);
+setTimeout(gsFetchReceipts, 1200);
 
 function dn(){
   const d=new Date();
@@ -840,7 +1168,7 @@ function buildSlip(num,plate,owner,phone,vtype,cyear,items,confirmed,isCustomer)
   <div style="padding:12px 18px;">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">
       <div>
-        <div style="font-size:15px;font-weight:700;color:${accent};">${cfg.name}</div>
+        <div style="font-size:15px;font-weight:700;color:${accent};">${cfg.name}${branch?' <span style="font-size:11px;font-weight:600;color:#666;">('+branch.name+')</span>':''}</div>
         <div style="font-size:11px;color:#555;">ใบอนุญาต ${cfg.license} | โทร ${cfg.tel}</div>
         <div style="font-size:11px;color:#555;">${cfg.addr}</div>
         <div style="font-size:11px;color:#555;">เลขภาษี ${cfg.tax}</div>
@@ -907,25 +1235,80 @@ function showR(html){
   w.scrollIntoView({behavior:'smooth',block:'start'});
 }
 
+/* ===== VALIDATION ===== */
+function validateForm(){
+  const plate=(document.getElementById('plate').value||'').trim();
+  const phone=(document.getElementById('phone').value||'').trim();
+  const cyear=(document.getElementById('cyear').value||'').trim();
+  const errs=[];
+  if(!plate)errs.push('กรุณากรอกทะเบียนรถ');
+  // เบอร์โทร (ถ้ากรอก) ต้องเป็นตัวเลข 9-10 หลัก
+  if(phone){
+    const digits=phone.replace(/[\s-]/g,'');
+    if(!/^\d{9,10}$/.test(digits))errs.push('เบอร์โทรไม่ถูกต้อง (ควรเป็นตัวเลข 9-10 หลัก)');
+  }
+  // ปีรถ (ถ้ากรอก) ต้องเป็น พ.ศ. สมเหตุผล
+  if(cyear){
+    const y=parseInt(cyear);
+    const thisYear=new Date().getFullYear()+543;
+    if(isNaN(y)||y<2500||y>thisYear+1)errs.push('ปีรถควรเป็น พ.ศ. เช่น '+thisYear);
+  }
+  return errs;
+}
+
+/* ===== AUTOFILL จากประวัติ ===== */
+// เมื่อพิมพ์ทะเบียนที่เคยมีในประวัติ → เติมชื่อ/เบอร์/ประเภท/ปี ให้อัตโนมัติ
+function autofillFromPlate(){
+  const plate=(document.getElementById('plate').value||'').trim().toUpperCase();
+  const hint=document.getElementById('autofill-hint');
+  if(plate.length<3){if(hint)hint.style.display='none';return;}
+  // หาบิลล่าสุดของทะเบียนนี้
+  const match=hist.find(h=>(h.plate||'').trim().toUpperCase()===plate);
+  if(!match){if(hint)hint.style.display='none';return;}
+  if(hint){
+    hint.style.display='flex';
+    hint.innerHTML=`<span style="flex:1;">พบลูกค้าเก่า: <b>${match.owner||'ไม่ระบุชื่อ'}</b>${match.phone?' · '+match.phone:''}</span>
+      <button onclick="applyAutofill('${match.num}')" style="background:var(--blue);color:#fff;border:none;border-radius:14px;padding:3px 12px;font-size:12px;cursor:pointer;font-family:'Sarabun',sans-serif;white-space:nowrap;">เติมข้อมูล</button>`;
+  }
+}
+
+function applyAutofill(num){
+  const m=hist.find(h=>h.num===num);if(!m)return;
+  if(m.owner)document.getElementById('owner').value=m.owner;
+  if(m.phone)document.getElementById('phone').value=m.phone;
+  if(m.vtype)document.getElementById('vtype').value=m.vtype;
+  if(m.cyear)document.getElementById('cyear').value=m.cyear;
+  document.getElementById('autofill-hint').style.display='none';
+  showToast('เติมข้อมูลลูกค้าเก่าแล้ว');
+}
+
 function preview(){
   if(!cart.length){showToast('เลือกรายการบริการก่อน');return;}
-  const num='RCP'+String(rnum+1).padStart(5,'0');
+  // ตอน preview ยังไม่รู้เลขบิลจริง (เลขจริงขอจาก Sheets ตอนกดออกบิล)
+  // จึงโชว์เป็น "ตัวอย่าง" ไม่ใช่เลขจริง กันสับสน
+  const num='(ตัวอย่าง — เลขจริงออกตอนกดบันทึก)';
   showR(buildR(num,document.getElementById('plate').value||'ไม่ระบุ',document.getElementById('owner').value,document.getElementById('phone').value,document.getElementById('vtype').value,document.getElementById('cyear').value,cart,false));
 }
 
 async function confirmSale(){
   if(!cart.length){showToast('เลือกรายการบริการก่อน');return;}
+  if(!branch){showToast('⚠️ กรุณาเลือกสาขาก่อนออกบิล');openBranchModal();return;}
+  // validate ก่อนออกบิล
+  const errs=validateForm();
+  if(errs.length){showToast('⚠️ '+errs[0]);return;}
   const btn=document.querySelector('.bp');
   if(btn){btn.disabled=true;btn.textContent='⏳ กำลังออกบิล...';}
   try{
     const num=await gsGetNextBillNum();
-    const plate=document.getElementById('plate').value||'ไม่ระบุ';
-    const owner=document.getElementById('owner').value;
-    const phone=document.getElementById('phone').value;
+    const plate=document.getElementById('plate').value.trim()||'ไม่ระบุ';
+    const owner=document.getElementById('owner').value.trim();
+    const phone=document.getElementById('phone').value.trim();
     const vtype=document.getElementById('vtype').value;
-    const cyear=document.getElementById('cyear').value;
+    const cyear=document.getElementById('cyear').value.trim();
     const tot=cart.reduce((s,i)=>s+i.price,0);
-    const rec={num,date:dn(),time:tn(),plate,owner,phone,vtype,cyear,items:[...cart],total:tot};
+    const rec={num,date:dn(),time:tn(),plate,owner,phone,vtype,cyear,items:[...cart],total:tot,
+      branch:branch.code,branchName:branch.name,
+      _offline:num.indexOf('-L')>-1}; // เลข L = ออกตอนออฟไลน์ ยังไม่มีเลขจริง
     hist.unshift(rec);
     localStorage.setItem('tro_hist',JSON.stringify(hist));
     showR(buildR(num,plate,owner,phone,vtype,cyear,cart,true));
@@ -989,12 +1372,13 @@ function dlAllJSON(){
 }
 
 function dlCSV(){
-  if(!hist.length){showToast('ไม่มีประวัติ');return;}
-  const hdr='\uFEFFเลขที่ใบเสร็จ,วันที่,เวลา,ทะเบียน,ประเภท,ชื่อเจ้าของ,โทร,ปีรถ,รายการ,ยอดรวม';
-  const rows=hist.map(r=>[r.num,r.date,r.time,r.plate,r.vtype,r.owner||'',r.phone||'',r.cyear||'',r.items.map(i=>i.name).join(' | '),r.total].map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(','));
+  const data=filterByBranch(hist);
+  if(!data.length){showToast('ไม่มีประวัติ');return;}
+  const hdr='\uFEFFเลขที่ใบเสร็จ,สาขา,วันที่,เวลา,ทะเบียน,ประเภท,ชื่อเจ้าของ,โทร,ปีรถ,รายการ,ยอดรวม';
+  const rows=data.map(r=>[r.num,r.branchName||r.branch||'',r.date,r.time,r.plate,r.vtype,r.owner||'',r.phone||'',r.cyear||'',r.items.map(i=>i.name).join(' | '),r.total].map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(','));
   const blob=new Blob([hdr+'\n'+rows.join('\n')],{type:'text/csv;charset=utf-8;'});
   const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);a.download='tro_receipts.csv';
+  a.href=URL.createObjectURL(blob);a.download='tro_receipts'+(branchFilter!=='all'?'_'+branchFilter:'')+'.csv';
   document.body.appendChild(a);a.click();
   setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},500);
 }
@@ -1058,61 +1442,186 @@ function stab(t){
     document.getElementById('pg-'+x).classList.toggle('on',x===t);
     document.getElementById('tab-'+x).classList.toggle('on',x===t);
   });
-  if(t==='cfg'){loadCfg();renderComCfg();}
+  if(t==='cfg'){loadCfg();renderComCfg();
+    const bn=document.getElementById('cfg-branch-name');
+    if(bn)bn.textContent=branch?branch.name+' (รหัส '+branch.code+')':'⚠️ ยังไม่เลือกสาขา';
+  }
   if(t==='taxdone')renderTaxDone();
 
   // หน้าที่ต้องดึงข้อมูลสดจาก Sheets ทุกครั้ง
   if(t==='hist'){
-    const el=document.getElementById('hlist');
-    if(el)el.innerHTML='<div style="text-align:center;padding:32px;color:var(--txt3);">⏳ กำลังโหลดข้อมูลล่าสุด...</div>';
-    gsFetchReceipts().finally(()=>rHist());
+    rHist(); // แสดงข้อมูล local ทันที
+    gsFetchReceipts().finally(()=>rHist()); // แล้วอัปเดตเมื่อ fetch เสร็จ
   }
   if(t==='summary'){
-    const el=document.getElementById('sum-result');
-    if(el)el.innerHTML='<div style="text-align:center;padding:32px;color:var(--txt3);">⏳ กำลังโหลดข้อมูลล่าสุด...</div>';
-    gsFetchReceipts().finally(()=>initSummaryDates());
+    initSummaryDates(); // คำนวณจากข้อมูล local ทันที ไม่ต้องรอเน็ต
+    gsFetchReceipts().finally(()=>{
+      if(document.getElementById('pg-summary')?.classList.contains('on'))calcSummary();
+    });
   }
   if(t==='taxcheck'){
-    gsFetchReceipts().finally(()=>loadTaxCheck());
+    loadTaxCheck(); // แสดง local ทันที
+    gsFetchReceipts().finally(()=>{
+      if(document.getElementById('pg-taxcheck')?.classList.contains('on'))loadTaxCheck();
+    });
   }
 }
 
 /* ===== HISTORY ===== */
+function clearHistDates(){
+  document.getElementById('hist-from').value='';
+  document.getElementById('hist-to').value='';
+  rHist();
+}
+
 function rHist(){
+  populateBranchFilters();
   const q=(document.getElementById('hsearch').value||'').toLowerCase();
+  const fromEl=document.getElementById('hist-from');
+  const toEl=document.getElementById('hist-to');
+  const from=fromEl&&fromEl.value?new Date(fromEl.value):null;
+  const to=toEl&&toEl.value?new Date(toEl.value):null;
+  if(from)from.setHours(0,0,0,0);
+  if(to)to.setHours(23,59,59,999);
   const el=document.getElementById('hlist');
-  const f=hist.filter(h=>h.plate.toLowerCase().includes(q)||(h.owner||'').toLowerCase().includes(q));
-  if(!f.length){el.innerHTML='<p style="color:var(--txt3);font-size:14px;text-align:center;padding:40px 0;">ยังไม่มีประวัติการออกใบเสร็จ</p>';return;}
-  el.innerHTML=f.map(h=>`
-    <div class="hist-item" onclick="viewHist('${h.num}')">
-      <div>
-        <div style="font-size:15px;font-weight:600;">${h.plate} <span style="color:var(--txt2);font-weight:400;font-size:13px;">${h.vtype}</span></div>
-        <div style="font-size:12px;color:var(--txt3);">${h.date} ${h.time}</div>
-        <div style="font-size:12px;color:var(--txt2);">${h.owner||'ไม่ระบุชื่อ'} | ${h.num}</div>
+  let f=filterByBranch(hist).filter(h=>{
+    const okText=h.plate.toLowerCase().includes(q)||(h.owner||'').toLowerCase().includes(q);
+    if(!okText)return false;
+    if(from||to){
+      const d=thDateToJS(h.date);
+      if(!d)return false;
+      if(from&&d<from)return false;
+      if(to&&d>to)return false;
+    }
+    return true;
+  });
+  if(!f.length){el.innerHTML='<p style="color:var(--txt3);font-size:14px;text-align:center;padding:40px 0;">ไม่พบรายการตามเงื่อนไข</p>';return;}
+  el.innerHTML=f.map(h=>{
+    const isVoid=h._void;
+    const isOffline=h._offline&&!h._synced;
+    let statusBadge;
+    if(isVoid)statusBadge='<span class="badge" style="background:#fdecea;color:#c0392b;margin-top:3px;display:inline-block;">ยกเลิกแล้ว</span>';
+    else if(isOffline)statusBadge='<span class="badge" style="background:#fff3e0;color:#e65100;margin-top:3px;display:inline-block;">⏳ รอ sync</span>';
+    else statusBadge='<span class="badge bs-ok" style="margin-top:3px;display:inline-block;">เสร็จสิ้น</span>';
+    return`
+    <div class="hist-item" onclick="viewHist('${h.num}')" style="${isVoid?'opacity:.55;':''}">
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:16px;font-weight:700;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;${isVoid?'text-decoration:line-through;':''}">${h.plate} <span style="color:var(--txt2);font-weight:400;font-size:12px;">${h.vtype}</span></div>
+        <div style="font-size:12px;color:var(--txt3);margin-top:1px;">${formatThaiDate(h.date)} ${h.time}${h.branchName?' · <span style="color:var(--blue);font-weight:600;">🏪 '+h.branchName+'</span>':''}</div>
+        <div style="font-size:12px;color:var(--txt2);">${h.owner||'ไม่ระบุชื่อ'} | <span style="color:var(--txt3);">${h.num}</span></div>
       </div>
-      <div style="text-align:right;">
-        <div style="font-size:16px;font-weight:700;color:var(--blue);">฿${h.total.toLocaleString()}</div>
-        <span class="badge bs-ok">เสร็จสิ้น</span>
+      <div style="text-align:right;flex-shrink:0;">
+        <div style="font-size:17px;font-weight:800;color:${isVoid?'var(--txt3)':'var(--blue)'};">฿${h.total.toLocaleString()}</div>
+        ${statusBadge}
       </div>
-    </div>`).join('');
+    </div>`;}).join('');
 }
 
 function viewHist(num){
   const h=hist.find(r=>r.num===num);if(!h)return;
+  // เปิด modal รายละเอียด + ปุ่มจัดการ (แก้ไข/ยกเลิก)
+  openBillActions(h);
+}
+
+/* ===== BILL ACTIONS (ดู / แก้ไข / ยกเลิก) ===== */
+function openBillActions(h){
+  const isVoid=h._void;
+  const body=document.getElementById('billact-body');
+  body.innerHTML=`
+    <div style="background:#f5f7fa;border-radius:10px;padding:14px;margin-bottom:14px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;">
+        <div>
+          <div style="font-size:18px;font-weight:800;color:var(--blue);">${h.plate}</div>
+          <div style="font-size:13px;color:var(--txt2);">${h.vtype}${h.cyear?' · ปีรถ '+h.cyear:''}</div>
+          <div style="font-size:12px;color:var(--txt3);">${h.owner||'ไม่ระบุชื่อ'}${h.phone?' · '+h.phone:''}</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:20px;font-weight:800;color:var(--txt);">฿${h.total.toLocaleString()}</div>
+          <div style="font-size:11px;color:var(--txt3);">${h.num}</div>
+          <div style="font-size:11px;color:var(--txt3);">${formatThaiDate(h.date)} ${h.time}</div>
+        </div>
+      </div>
+      ${isVoid?'<div style="margin-top:10px;background:#fdecea;color:#c0392b;border-radius:6px;padding:6px 10px;font-size:12px;font-weight:600;text-align:center;">⛔ บิลนี้ถูกยกเลิกแล้ว</div>':''}
+    </div>
+    <div style="font-size:12px;font-weight:700;color:var(--txt3);margin-bottom:6px;">รายการในบิล</div>
+    <div style="background:#fff;border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:16px;">
+      ${h.items.map((it,i)=>`<div style="display:flex;justify-content:space-between;padding:8px 12px;${i>0?'border-top:1px solid #f0f0f0;':''}">
+        <span style="font-size:13px;">${it.name}${it.ins?' ('+it.ins+')':''}</span>
+        <span style="font-size:13px;font-weight:600;">฿${(it.price||0).toLocaleString()}</span>
+      </div>`).join('')}
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="bs-btn" style="flex:1;justify-content:center;min-width:130px;" onclick="reprintBill('${h.num}')"><i class="ti ti-printer"></i> พิมพ์ใบเสร็จซ้ำ</button>
+      ${isVoid
+        ? `<button class="bs-btn" style="flex:1;justify-content:center;min-width:130px;border-color:#2e7d32;color:#2e7d32;" onclick="unvoidBill('${h.num}')"><i class="ti ti-rotate"></i> ยกเลิกการ void</button>`
+        : `<button class="bs-btn" style="flex:1;justify-content:center;min-width:130px;border-color:var(--blue);color:var(--blue);" onclick="editBill('${h.num}')"><i class="ti ti-edit"></i> แก้ไข (สร้างบิลใหม่)</button>
+           <button class="bs-btn" style="flex:1;justify-content:center;min-width:130px;border-color:#c0392b;color:#c0392b;" onclick="voidBill('${h.num}')"><i class="ti ti-ban"></i> ยกเลิกบิล</button>`}
+    </div>`;
+  document.getElementById('billact-modal').style.display='flex';
+}
+
+function closeBillActions(){document.getElementById('billact-modal').style.display='none';}
+
+function reprintBill(num){
+  const h=hist.find(r=>r.num===num);if(!h)return;
+  closeBillActions();
+  stab('sale');
+  showR(buildR(h.num,h.plate,h.owner,h.phone,h.vtype,h.cyear,h.items,true));
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/* แก้ไขบิล = โหลดข้อมูลกลับเข้าฟอร์มเพื่อออกบิลใหม่ (บิลเก่ายังอยู่ ควร void เองถ้าต้องการ) */
+function editBill(num){
+  const h=hist.find(r=>r.num===num);if(!h)return;
+  closeBillActions();
   stab('sale');
   document.getElementById('plate').value=h.plate;
   document.getElementById('owner').value=h.owner||'';
   document.getElementById('phone').value=h.phone||'';
   document.getElementById('cyear').value=h.cyear||'';
-  cart=[...h.items];
-  taxInCart=h.items.some(i=>i.code==='TAX-AMT');
+  document.getElementById('vtype').value=h.vtype||'รย.1';
+  cart=h.items.filter(i=>i.code!=='_gs').map(i=>({...i}));
+  taxInCart=cart.some(i=>i.code==='TAX-AMT');
   if(taxInCart){
-    const t=h.items.find(i=>i.code==='TAX-AMT');
-    if(t){document.getElementById('taxamt').value=t.price;document.getElementById('taxamt').disabled=true;document.getElementById('taxbtn').textContent='−';document.getElementById('taxbtn').className='tax-addbtn rm';}
+    const t=cart.find(i=>i.code==='TAX-AMT');
+    if(t){const ta=document.getElementById('taxamt');ta.value=t.price;ta.disabled=true;
+      document.getElementById('taxbtn').textContent='−';document.getElementById('taxbtn').className='tax-addbtn rm';}
   }
   rSvcs();rCart();
-  showR(buildR(h.num,h.plate,h.owner,h.phone,h.vtype,h.cyear,h.items,true));
+  showToast('โหลดข้อมูลบิลเดิมแล้ว — แก้ไขแล้วกดออกบิลใหม่');
   window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/* ยกเลิกบิล (void) — ทำเครื่องหมาย ไม่ลบทิ้ง เพื่อเก็บประวัติ */
+function voidBill(num){
+  if(!confirm('ยืนยันยกเลิกบิล '+num+' ?\nบิลจะถูกทำเครื่องหมายว่ายกเลิก และไม่ถูกนับในสรุปยอด'))return;
+  const h=hist.find(r=>r.num===num);if(!h)return;
+  h._void=true;
+  localStorage.setItem('tro_hist',JSON.stringify(hist));
+  gsVoidBill(num,true);
+  closeBillActions();rHist();
+  showToast('ยกเลิกบิลแล้ว');
+}
+
+function unvoidBill(num){
+  const h=hist.find(r=>r.num===num);if(!h)return;
+  h._void=false;delete h._void;
+  localStorage.setItem('tro_hist',JSON.stringify(hist));
+  gsVoidBill(num,false);
+  closeBillActions();rHist();
+  showToast('คืนสถานะบิลแล้ว');
+}
+
+/* ส่งสถานะ void ไป Sheets */
+async function gsVoidBill(num,isVoid){
+  const payload={action:'voidReceipt',secret:API_SECRET,num,voided:isVoid?1:0};
+  if(!navigator.onLine){offlineQueue.push(payload);saveQueue();return;}
+  try{
+    await fetch(GAS_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)});
+  }catch(e){
+    try{await fetch(GAS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify(payload)});}
+    catch(e2){offlineQueue.push(payload);saveQueue();}
+  }
 }
 
 /* ===== SETTINGS ===== */
@@ -1147,7 +1656,7 @@ async function gsGetConfig(){
 
 async function gsSaveConfig(type){
   try{
-    const payload={action:'saveConfig',type,
+    const payload={action:'saveConfig',secret:API_SECRET,type,
       cfg:type==='shop'?cfg:undefined,
       comCfg:type==='com'?comCfg:undefined};
     await fetch(GAS_URL,{method:'POST',mode:'no-cors',
@@ -1221,9 +1730,30 @@ function saveComCfg(){
 
 /* ===== DATE HELPER ===== */
 function thDateToJS(thDate){
+  if(!thDate)return null;
+  const s=String(thDate).trim();
+  // รูปแบบ ISO เช่น 2569-06-29T17:00:00.000Z หรือ 2569-06-29
+  // (ปีอาจเป็น พ.ศ. ที่หลุดมาจาก Sheets — ถ้า >2500 ให้ลบ 543)
+  const iso=s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if(iso){
+    let y=parseInt(iso[1]);
+    if(y>2500)y-=543; // แปลง พ.ศ. → ค.ศ.
+    return new Date(y,parseInt(iso[2])-1,parseInt(iso[3]));
+  }
+  // รูปแบบไทย เช่น 29 มิถุนายน 2569
   const months={มกราคม:0,กุมภาพันธ์:1,มีนาคม:2,เมษายน:3,พฤษภาคม:4,มิถุนายน:5,กรกฎาคม:6,สิงหาคม:7,กันยายน:8,ตุลาคม:9,พฤศจิกายน:10,ธันวาคม:11};
-  const p=thDate.split(' ');if(p.length<3)return null;
-  return new Date(parseInt(p[2])-543,months[p[1]],parseInt(p[0]));
+  const p=s.split(' ');if(p.length<3)return null;
+  const mon=months[p[1]];
+  if(mon===undefined)return null;
+  return new Date(parseInt(p[2])-543,mon,parseInt(p[0]));
+}
+
+/* แปลงวันที่เป็นรูปแบบไทยอ่านง่ายเสมอ (รับได้ทั้ง ISO และไทย) */
+function formatThaiDate(raw){
+  const d=thDateToJS(raw);
+  if(!d||isNaN(d))return raw||'-';
+  const m=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+  return d.getDate()+' '+m[d.getMonth()]+' '+(d.getFullYear()+543);
 }
 
 /* ===== PROFIT CALC HELPER ===== */
@@ -1278,7 +1808,7 @@ function showInvDetail(num){
   document.getElementById('inv-modal-body').innerHTML=`
     <div style="background:#f5f7fa;border-radius:8px;padding:12px 14px;margin-bottom:14px;">
       <div style="font-size:14px;font-weight:700;">เลขที่ ${h.num}</div>
-      <div style="font-size:12px;color:#666;">${h.date} ${h.time} | ทะเบียน ${h.plate} (${h.vtype})</div>
+      <div style="font-size:12px;color:#666;">${formatThaiDate(h.date)} ${h.time} | ทะเบียน ${h.plate} (${h.vtype})</div>
       ${h.owner?`<div style="font-size:12px;color:#666;">เจ้าของ: ${h.owner}</div>`:''}
     </div>
     <div style="font-size:13px;font-weight:600;color:#1a1d23;margin-bottom:6px;">รายได้แยกประเภท</div>
@@ -1336,12 +1866,13 @@ function showInvDetail(num){
 
 /* ===== SUMMARY ===== */
 function calcSummary(){
+  populateBranchFilters();
   const from=document.getElementById('sum-from').value;
   const to=document.getElementById('sum-to').value;
   if(!from||!to){showToast('กรุณาเลือกช่วงวันที่');return;}
   const fd=new Date(from);fd.setHours(0,0,0,0);
   const td=new Date(to);td.setHours(23,59,59,999);
-  const filtered=hist.filter(h=>{const d=thDateToJS(h.date);return d&&d>=fd&&d<=td;});
+  const filtered=filterByBranch(hist).filter(h=>{if(h._void)return false;const d=thDateToJS(h.date);return d&&d>=fd&&d<=td;});
   if(!filtered.length){
     document.getElementById('sum-result').innerHTML=`<div style="text-align:center;padding:40px;color:var(--txt3);">ไม่มีข้อมูลในช่วงวันที่เลือก</div>`;
     return;
@@ -1358,33 +1889,67 @@ function calcSummary(){
     const r=calcBillProfit(h.items,h);
     return`<tr style="border-bottom:1px solid #f0f0f0;cursor:pointer;" onclick="showInvDetail('${h.num}')" onmouseover="this.style.background='#f8faff'" onmouseout="this.style.background=''">
       <td style="padding:8px 10px;">
-        <div style="font-size:13px;font-weight:600;">${h.num}</div>
-        <div style="font-size:11px;color:#888;">${h.plate}</div>
+        <div style="font-size:13px;font-weight:700;">${h.plate}</div>
+        <div style="font-size:11px;color:#888;">${h.num}</div>
       </td>
-      <td style="padding:8px 10px;font-size:12px;color:#666;">${h.date}<br>${h.time}</td>
-      <td style="padding:8px 10px;text-align:right;font-size:13px;font-weight:600;">฿${r.rev.toLocaleString()}</td>
-      <td style="padding:8px 10px;text-align:right;font-size:13px;color:#c0392b;">฿${r.cost.toLocaleString()}</td>
+      <td style="padding:8px 10px;font-size:12px;color:#666;white-space:nowrap;">${formatThaiDate(h.date)}</td>
+      <td style="padding:8px 10px;text-align:right;font-size:13px;font-weight:700;">฿${r.rev.toLocaleString()}</td>
       <td style="padding:8px 10px;text-align:right;font-size:13px;font-weight:700;color:#2e7d32;">฿${r.profit.toLocaleString()}</td>
-      <td style="padding:8px 10px;text-align:center;"><button onclick="event.stopPropagation();showInvDetail('${h.num}')" style="background:#185FA5;color:#fff;border:none;border-radius:6px;padding:5px 10px;font-size:12px;cursor:pointer;font-family:'Sarabun',sans-serif;">ดูรายละเอียด</button></td>
+      <td style="padding:8px 10px;text-align:center;"><button onclick="event.stopPropagation();showInvDetail('${h.num}')" style="background:#185FA5;color:#fff;border:none;border-radius:6px;padding:5px 10px;font-size:12px;cursor:pointer;font-family:'Sarabun',sans-serif;">ดู</button></td>
     </tr>`;
   }).join('');
+
+  // สรุปแยกรายสาขา (แสดงเฉพาะตอนดู "ทุกสาขา")
+  let branchBreakdown='';
+  if(branchFilter==='all'){
+    const byBranch={};
+    filtered.forEach(h=>{
+      const code=h.branch||'ไม่ระบุ';
+      const name=h.branchName||getBranchName(h.branch)||'ไม่ระบุสาขา';
+      if(!byBranch[code])byBranch[code]={name,rev:0,profit:0,count:0};
+      const r=calcBillProfit(h.items,h);
+      byBranch[code].rev+=r.rev;byBranch[code].profit+=r.profit;byBranch[code].count++;
+    });
+    const branchCards=Object.values(byBranch).sort((a,b)=>b.rev-a.rev).map(b=>`
+      <div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;box-shadow:var(--shadow);">
+        <div style="font-size:13px;font-weight:700;color:var(--blue);margin-bottom:6px;">🏪 ${b.name}</div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--txt2);margin-bottom:3px;"><span>ยอดขาย</span><span style="font-weight:700;color:var(--txt);">฿${b.rev.toLocaleString()}</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--txt2);margin-bottom:3px;"><span>กำไร</span><span style="font-weight:700;color:#2e7d32;">฿${b.profit.toLocaleString()}</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--txt3);"><span>จำนวนบิล</span><span>${b.count} ใบ</span></div>
+      </div>`).join('');
+    branchBreakdown=`
+      <div style="font-size:13px;font-weight:700;color:var(--txt2);margin:4px 0 10px;">📊 แยกตามสาขา</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:18px;">${branchCards}</div>`;
+  }
+
   document.getElementById('sum-result').innerHTML=`
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px;">
-      ${kpi('ยอดขายรวม (Total Revenue)',totalRev,'var(--blue)',filtered.length+' ใบเสร็จ')}
-      ${kpi('ต้นทุนรวม (Total Cost)',totalCost,'#c0392b','')}
-      ${kpi('กำไรสุทธิรวม (Net Profit)',totalProfit,'#2e7d32','')}
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:16px;">
+      <div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow);border-left:4px solid var(--blue);">
+        <div style="font-size:11px;color:var(--txt3);margin-bottom:4px;font-weight:600;">ยอดขายรวม${branchFilter!=='all'?' ('+getBranchName(branchFilter)+')':''}</div>
+        <div style="font-size:22px;font-weight:800;color:var(--blue);">฿${totalRev.toLocaleString('th',{minimumFractionDigits:0})}</div>
+        <div style="font-size:11px;color:var(--txt3);margin-top:2px;">${filtered.length} ใบเสร็จ</div>
+      </div>
+      <div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow);border-left:4px solid #e53935;">
+        <div style="font-size:11px;color:var(--txt3);margin-bottom:4px;font-weight:600;">ต้นทุนรวม</div>
+        <div style="font-size:22px;font-weight:800;color:#c0392b;">฿${totalCost.toLocaleString('th',{minimumFractionDigits:0})}</div>
+      </div>
+      <div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow);border-left:4px solid #2e7d32;">
+        <div style="font-size:11px;color:var(--txt3);margin-bottom:4px;font-weight:600;">กำไรสุทธิ</div>
+        <div style="font-size:22px;font-weight:800;color:#2e7d32;">฿${totalProfit.toLocaleString('th',{minimumFractionDigits:0})}</div>
+        <div style="font-size:11px;color:var(--txt3);margin-top:2px;">${totalRev>0?(totalProfit/totalRev*100).toFixed(1):'0'}% margin</div>
+      </div>
     </div>
+    ${branchBreakdown}
     <div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;">
-      <div style="padding:10px 14px;background:var(--bg);font-size:12px;font-weight:700;color:var(--txt3);border-bottom:1px solid var(--border);">รายการบิลทั้งหมด</div>
-      <div style="overflow-x:auto;">
-        <table style="width:100%;border-collapse:collapse;min-width:520px;">
+      <div style="padding:10px 14px;background:var(--bg);font-size:12px;font-weight:700;color:var(--txt3);border-bottom:1px solid var(--border);">รายการบิลทั้งหมด (กดเพื่อดูรายละเอียด)</div>
+      <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
+        <table style="width:100%;border-collapse:collapse;min-width:480px;">
           <thead><tr style="background:#f0f4fa;">
             <th style="padding:8px 10px;text-align:left;font-size:11px;color:#666;font-weight:600;">เลขที่บิล / ทะเบียน</th>
-            <th style="padding:8px 10px;text-align:left;font-size:11px;color:#666;font-weight:600;">วันที่-เวลา</th>
-            <th style="padding:8px 10px;text-align:right;font-size:11px;color:#666;font-weight:600;">ยอดรวมบิล</th>
-            <th style="padding:8px 10px;text-align:right;font-size:11px;color:#666;font-weight:600;">ต้นทุน</th>
-            <th style="padding:8px 10px;text-align:right;font-size:11px;color:#666;font-weight:600;">กำไรบิลนี้</th>
-            <th style="padding:8px 10px;text-align:center;font-size:11px;color:#666;font-weight:600;">รายละเอียด</th>
+            <th style="padding:8px 10px;text-align:left;font-size:11px;color:#666;font-weight:600;">วันที่</th>
+            <th style="padding:8px 10px;text-align:right;font-size:11px;color:#666;font-weight:600;">ยอดรวม</th>
+            <th style="padding:8px 10px;text-align:right;font-size:11px;color:#666;font-weight:600;">กำไร</th>
+            <th style="padding:8px 10px;text-align:center;font-size:11px;color:#666;font-weight:600;"></th>
           </tr></thead>
           <tbody>${rows}</tbody>
         </table>
@@ -1395,8 +1960,11 @@ function calcSummary(){
 /* ===== TAX CHECK STATE ===== */
 // tcState: { "num|plate" → {checked, status, taxAmt, plate, owner, phone, vtype, cyear, date, time, num} }
 let tcState=JSON.parse(localStorage.getItem('tro_tcstate')||'{}');
+// จำเลขบิลที่ถูกล้างออกจากรายการต่อภาษีแล้ว เพื่อไม่ให้ polling ดึงกลับมา
+let tcCleared=JSON.parse(localStorage.getItem('tro_tccleared')||'[]');
 
 function saveTcState(){localStorage.setItem('tro_tcstate',JSON.stringify(tcState));}
+function saveTcCleared(){localStorage.setItem('tro_tccleared',JSON.stringify(tcCleared));}
 
 function updateTaxDoneBadge(){
   const done=Object.values(tcState).filter(s=>s.status==='done');
@@ -1406,8 +1974,9 @@ function updateTaxDoneBadge(){
 
 /* loadTaxCheck — ดึงรถทั้งหมดที่ไม่ใช่ done มาแสดงอัตโนมัติ */
 function loadTaxCheck(){
-  // เพิ่มรถใหม่จาก hist ที่ยังไม่มีใน tcState
+  // เพิ่มรถใหม่จาก hist ที่ยังไม่มีใน tcState (ข้ามบิลที่ยกเลิก)
   hist.forEach(h=>{
+    if(h._void)return;
     const key=h.num;
     if(!tcState[key]){
       const taxItem=h.items.find(it=>it.code==='TAX-AMT');
@@ -1482,7 +2051,7 @@ function renderTcList(list){
             }).join('')}
           </div>
           <div style="display:flex;gap:14px;flex-wrap:wrap;">
-            <div><div style="font-size:10px;color:#888;">วันที่</div><div style="font-size:12px;font-weight:600;">${s.date}</div></div>
+            <div><div style="font-size:10px;color:#888;">วันที่</div><div style="font-size:12px;font-weight:600;">${formatThaiDate(s.date)}</div></div>
             <div><div style="font-size:10px;color:#888;">เลขที่</div><div style="font-size:12px;">${s.num}</div></div>
             ${s.taxAmt?`<div><div style="font-size:10px;color:#888;">ค่าภาษี</div><div style="font-size:13px;font-weight:700;color:var(--blue);">฿${s.taxAmt.toLocaleString()}</div></div>`:''}
           </div>
@@ -1548,7 +2117,7 @@ function renderTaxDone(){
         </div>
         <div style="text-align:right;">
           ${s.taxAmt?`<div style="font-size:15px;font-weight:700;color:#2e7d32;">฿${s.taxAmt.toLocaleString()}</div>`:''}
-          <div style="font-size:11px;color:#888;">${s.date}</div>
+          <div style="font-size:11px;color:#888;">${formatThaiDate(s.date)}</div>
         </div>
       </div>
       <div style="margin-top:10px;display:flex;justify-content:flex-end;">
@@ -1607,7 +2176,67 @@ function updateTcBar(){
   }
 }
 
+/* ===== BRANCH FUNCTIONS ===== */
+function renderBranchTopbar(){
+  const el=document.getElementById('topbar-branch');
+  if(el)el.textContent=branch?'🏪 '+branch.name:'⚠️ ยังไม่เลือกสาขา';
+}
+
+function openBranchModal(){
+  const grid=document.getElementById('branch-grid');
+  grid.innerHTML=BRANCHES.map(b=>`
+    <button onclick="selectBranch('${b.code}')"
+      style="display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border:2px solid ${branch&&branch.code===b.code?'var(--blue)':'var(--border2)'};background:${branch&&branch.code===b.code?'var(--blue-lt)':'#fff'};border-radius:12px;cursor:pointer;font-family:'Sarabun',sans-serif;transition:all .15s;"
+      onmouseover="this.style.borderColor='var(--blue)';this.style.background='var(--blue-lt)';"
+      onmouseout="this.style.borderColor='${branch&&branch.code===b.code?'var(--blue)':'var(--border2)'}';this.style.background='${branch&&branch.code===b.code?'var(--blue-lt)':'#fff'}';">
+      <span style="font-size:16px;font-weight:700;color:var(--txt);">${b.name}</span>
+      <span style="font-size:12px;color:var(--txt3);">รหัส ${b.code}</span>
+    </button>`).join('');
+  document.getElementById('branch-modal').style.display='flex';
+}
+
+function selectBranch(code){
+  const b=BRANCHES.find(x=>x.code===code);
+  if(!b)return;
+  branch={code:b.code,name:b.name};
+  localStorage.setItem('tro_branch',JSON.stringify(branch));
+  document.getElementById('branch-modal').style.display='none';
+  renderBranchTopbar();
+  showToast('✅ ตั้งเป็น '+b.name+' แล้ว');
+  // refresh ข้อมูลให้กรองตามสาขาใหม่
+  if(typeof gsFetchReceipts==='function')gsFetchReceipts();
+}
+
+/* เติมรายชื่อสาขาใน dropdown กรอง (หน้าประวัติ + สรุปยอด) */
+function populateBranchFilters(){
+  const opts='<option value="all">ทุกสาขา</option>'+
+    BRANCHES.map(b=>`<option value="${b.code}">${b.name}</option>`).join('');
+  ['hbranch','sumbranch'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el){const cur=el.value;el.innerHTML=opts;el.value=branchFilter;}
+  });
+}
+
+/* ให้ dropdown ทั้ง 2 หน้าตรงกันเสมอ */
+function syncBranchFilters(){
+  ['hbranch','sumbranch'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el)el.value=branchFilter;
+  });
+}
+
+/* กรองรายการตามสาขาที่เลือก */
+function filterByBranch(list){
+  if(branchFilter==='all')return list;
+  return list.filter(h=>(h.branch||'')===branchFilter);
+}
+
 /* ===== INIT ===== */
+renderBranchTopbar();
+if(!branch){
+  // ครั้งแรก — บังคับเลือกสาขาก่อน
+  setTimeout(openBranchModal, 300);
+}
 rSvcs();rCart();updateTaxDoneBadge();
 </script>
 </body>
