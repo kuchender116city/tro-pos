@@ -508,6 +508,19 @@
         <i class="ti ti-upload" style="font-size:13px;vertical-align:-2px;"></i> Upload บิลค้าง
       </button>
     </div>
+
+    <!-- จัดการข้อมูลในเครื่อง -->
+    <div style="font-size:15px;font-weight:600;margin-bottom:4px;color:#c0392b;border-top:1px solid var(--border);padding-top:16px;margin-top:20px;">🗑️ จัดการข้อมูลในเครื่องนี้</div>
+    <div style="font-size:12px;color:var(--txt3);margin-bottom:10px;">ข้อมูลในเครื่องเป็นสำเนาสำรอง — ฐานข้อมูลจริงอยู่ที่ Google Sheets การล้างที่นี่ไม่กระทบ Sheets</div>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <button class="bs-btn" onclick="reloadFromSheets()" style="justify-content:center;border-color:var(--blue);color:var(--blue);">
+        <i class="ti ti-cloud-download" style="font-size:13px;vertical-align:-2px;"></i> โหลดข้อมูลใหม่จาก Google Sheets
+      </button>
+      <button class="bs-btn" onclick="clearLocalData()" style="justify-content:center;border-color:#c0392b;color:#c0392b;">
+        <i class="ti ti-trash" style="font-size:13px;vertical-align:-2px;"></i> ล้างข้อมูลทดลอง/ค้างในเครื่อง
+      </button>
+    </div>
+    <div style="font-size:11px;color:#888;margin-top:8px;">💡 ใช้เมื่อมีบิลทดลองเก่าค้าง (เช่น เลข RCP00NaN) หรือข้อมูลในเครื่องไม่ตรงกับ Sheets</div>
   </div>
 </div>
 
@@ -576,7 +589,7 @@ let hist=JSON.parse(localStorage.getItem('tro_hist')||'[]');
 let cfg=JSON.parse(localStorage.getItem('tro_cfg')||'{"name":"สถานตรวจสภาพรถ XXX","license":"ตรอ.00-0000","addr":"123 ถนน... กรุงเทพฯ 10000","tel":"02-xxx-xxxx","tax":"x-xxxx-xxxxx-xx-x"}');
 
 /* ===== GOOGLE SHEETS SYNC ===== */
-const GAS_URL='https://script.google.com/macros/s/AKfycbyLXcLBfaR7SdQc_PLa02aOwSrMlBjWV1I1pexSdMhHIotlKHnhhTzfpIe1wrQ6ikqf/exec';
+const GAS_URL='https://script.google.com/macros/s/AKfycbygkgtEIhBqZhIeAKjGtt8x1XkDtyljkpogY7ZRwdQR5i9e7yC-LWq84JnqynNKSfOo/exec';
 
 /* ===== SECRET KEY — ต้องตรงกับใน Apps Script =====
    เปลี่ยนเป็นค่าลับของคุณเอง (อะไรก็ได้ที่เดายาก) แล้วใส่ค่าเดียวกันใน Apps Script */
@@ -707,7 +720,7 @@ async function gsSaveReceipt(rec){
 
 /* สร้าง payload สำหรับบันทึกบิล (ใช้ร่วมกันทั้ง save และ queue) */
 function buildReceiptPayload(rec){
-  const {profit}=calcBillProfit(rec.items,rec);
+  const {profit,cats}=calcBillProfit(rec.items,rec);
   const cost=rec.total-profit;
   const taxItem=rec.items.find(i=>i.code==='TAX-AMT');
   return{
@@ -721,7 +734,12 @@ function buildReceiptPayload(rec){
     items:rec.items.map(i=>i.name+(i.ins?' ('+i.ins+')':'')).join(', '),
     taxAmt:taxItem?taxItem.price:0,
     total:rec.total,cost,profit,
-    offlineNum:rec._offline?rec.num:''  // ถ้าเป็นบิลออฟไลน์ ส่งเลข L เดิมไปด้วย เพื่อให้ server ออกเลขจริงแทน
+    // กำไรแยกหมวด (ส่งไปเก็บใน Sheets เพื่อแสดงสรุปยอดแยกประเภทได้)
+    pInspect:cats.inspect.profit, pPrb:cats.prb.profit,
+    pTaxsvc:cats.taxsvc.profit,   pOther:cats.other.profit,
+    rInspect:cats.inspect.rev,    rPrb:cats.prb.rev,
+    rTaxsvc:cats.taxsvc.rev,      rTax:cats.tax.rev,    rOther:cats.other.rev,
+    offlineNum:rec._offline?rec.num:''
   };
 }
 
@@ -807,6 +825,26 @@ function replaceBillNum(oldNum,newNum){
   }
 }
 
+/* สร้าง cats (กำไรแยกหมวด) จากคอลัมน์ใน Sheets — คืน null ถ้าไม่มีข้อมูลแยกหมวด */
+function buildCatsFromSheet(r){
+  // ถ้าไม่มีคอลัมน์กำไรแยกหมวดเลย (บิลเก่า) → null ให้ fallback ไป other
+  const hasBreakdown=r['กำไรค่าตรวจ']!==undefined||r['กำไรพรบ']!==undefined||
+                     r['กำไรฝากต่อ']!==undefined;
+  if(!hasBreakdown)return null;
+  const n=(v)=>parseFloat(v)||0;
+  const pInspect=n(r['กำไรค่าตรวจ']), pPrb=n(r['กำไรพรบ']),
+        pTaxsvc=n(r['กำไรฝากต่อ']),   pOther=n(r['กำไรอื่นๆ']);
+  const rInspect=n(r['รายรับค่าตรวจ']), rPrb=n(r['รายรับพรบ']),
+        rTaxsvc=n(r['รายรับฝากต่อ']),   rTax=n(r['รายรับภาษี'])||n(r['ค่าภาษี']), rOther=n(r['รายรับอื่นๆ']);
+  return{
+    inspect:{rev:rInspect,cost:rInspect-pInspect,profit:pInspect},
+    prb:{rev:rPrb,cost:rPrb-pPrb,profit:pPrb},
+    taxsvc:{rev:rTaxsvc,cost:rTaxsvc-pTaxsvc,profit:pTaxsvc},
+    tax:{rev:rTax,cost:rTax,profit:0},
+    other:{rev:rOther,cost:rOther-pOther,profit:pOther}
+  };
+}
+
 /* ดึงข้อมูลจาก Sheets มา merge — เป็น single source of truth */
 async function gsFetchReceipts(){
   if(!navigator.onLine){gsStatus(false,'ออฟไลน์');return;}
@@ -830,6 +868,7 @@ async function gsFetchReceipts(){
           _taxAmt:parseFloat(r['ค่าภาษี'])||0,
           _void:String(r['ยกเลิก']||'')==='1'||r['ยกเลิก']===1,
           _ts:r['timestamp']||'',
+          _cats:buildCatsFromSheet(r),
           _fromSheets:true,_synced:true
         };
       });
@@ -1698,6 +1737,37 @@ function saveCfg(){
   showToast('✅ บันทึกการตั้งค่าร้าน — sync ทุกเครื่องแล้ว');
 }
 
+/* ล้างข้อมูลบิล/ประวัติในเครื่อง (ไม่กระทบ Google Sheets) */
+function clearLocalData(){
+  if(!confirm('ล้างข้อมูลบิลและประวัติในเครื่องนี้?\n\n• ฐานข้อมูลจริงใน Google Sheets ไม่ถูกลบ\n• ระบบจะโหลดข้อมูลล่าสุดจาก Sheets ใหม่\n• ใช้แก้ปัญหาบิลทดลองเก่าค้าง (เช่น RCP00NaN)\n\nยืนยันล้าง?'))return;
+  // ลบเฉพาะข้อมูลบิล/ประวัติ/สถานะภาษี — เก็บการตั้งค่าร้าน สาขา ค่าคอม ไว้
+  localStorage.removeItem('tro_hist');
+  localStorage.removeItem('tro_tcstate');
+  localStorage.removeItem('tro_tccleared');
+  localStorage.removeItem('tro_offline_queue');
+  localStorage.removeItem('tro_rnum');
+  hist=[];tcState={};tcCleared=[];offlineQueue=[];
+  showToast('🗑️ ล้างข้อมูลในเครื่องแล้ว — กำลังโหลดจาก Sheets...');
+  // โหลดข้อมูลจริงจาก Sheets กลับมา
+  setTimeout(()=>{gsFetchReceipts().finally(()=>{
+    if(document.getElementById('pg-hist')?.classList.contains('on'))rHist();
+    showToast('✅ พร้อมใช้งาน');
+  });},500);
+}
+
+/* โหลดข้อมูลใหม่จาก Sheets ทับของในเครื่อง */
+function reloadFromSheets(){
+  showToast('🔄 กำลังโหลดจาก Google Sheets...');
+  // ล้าง hist ในเครื่องเพื่อให้ดึงสดจาก Sheets (เก็บคิวออฟไลน์ที่ยังไม่ sync ไว้)
+  hist=hist.filter(h=>h._fromSheets!==true&&!h._synced); // เหลือเฉพาะบิล local ที่ยังไม่ขึ้น Sheets
+  localStorage.setItem('tro_hist',JSON.stringify(hist));
+  gsFetchReceipts().finally(()=>{
+    if(document.getElementById('pg-hist')?.classList.contains('on'))rHist();
+    if(document.getElementById('pg-summary')?.classList.contains('on'))calcSummary();
+    showToast('✅ โหลดข้อมูลล่าสุดแล้ว');
+  });
+}
+
 function renderComCfg(){
   document.getElementById('com-cfg-list').innerHTML=INS_COS.map(co=>`
     <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);border-radius:var(--radius-sm);border:1px solid var(--border);">
@@ -1759,26 +1829,40 @@ function formatThaiDate(raw){
 
 /* ===== PROFIT CALC HELPER ===== */
 function calcBillProfit(items, record){
-  // ถ้า record มาจาก Sheets ใช้ค่าที่บันทึกไว้เลย (แม่นยำกว่า)
+  // ถ้า record มาจาก Sheets ใช้ค่าที่บันทึกไว้ + แยกหมวดถ้ามี
   if(record&&record._fromSheets&&record._profit!==undefined){
     const rev=record.total||0;
     const profit=record._profit||0;
     const cost=record._cost||(rev-profit);
-    const cats={inspect:{rev:0,cost:0,profit:0},prb:{rev:0,cost:0,profit:0},tax:{rev:0,cost:0,profit:0},other:{rev:rev,cost:cost,profit:profit}};
+    // ถ้า Sheets มีกำไรแยกหมวด ใช้เลย ไม่งั้นยัดใส่ other
+    if(record._cats){
+      return{rev,cost,profit,cats:record._cats};
+    }
+    const cats={
+      inspect:{rev:0,cost:0,profit:0},prb:{rev:0,cost:0,profit:0},
+      taxsvc:{rev:0,cost:0,profit:0},tax:{rev:0,cost:0,profit:0},
+      other:{rev:rev,cost:cost,profit:profit}
+    };
     return{rev,cost,profit,cats};
   }
   // คำนวณจาก items (local records)
   let rev=0,cost=0,profit=0;
-  const cats={inspect:{rev:0,cost:0,profit:0},prb:{rev:0,cost:0,profit:0},tax:{rev:0,cost:0,profit:0},other:{rev:0,cost:0,profit:0}};
+  const cats={
+    inspect:{rev:0,cost:0,profit:0},prb:{rev:0,cost:0,profit:0},
+    taxsvc:{rev:0,cost:0,profit:0},tax:{rev:0,cost:0,profit:0},
+    other:{rev:0,cost:0,profit:0}
+  };
   items.forEach(it=>{
     rev+=it.price;
     if(it.code==='TRO-01'||it.code==='TRO-02'){
       const p=FIXED_PROFIT[it.code]||0;
       profit+=p;cats.inspect.rev+=it.price;cats.inspect.cost+=(it.price-p);cats.inspect.profit+=p;
     } else if(it.code==='TAX-SVC'){
+      // ค่าบริการต่อภาษี (ค่าฝากต่อ) — เป็นกำไรล้วน
       const p=FIXED_PROFIT['TAX-SVC'];
-      profit+=p;cats.tax.rev+=it.price;cats.tax.cost+=(it.price-p);cats.tax.profit+=p;
+      profit+=p;cats.taxsvc.rev+=it.price;cats.taxsvc.cost+=(it.price-p);cats.taxsvc.profit+=p;
     } else if(it.code==='TAX-AMT'){
+      // ค่าภาษีรถ — เงินที่ส่งกรมขนส่ง ไม่ใช่กำไร (รับเท่าไหร่จ่ายเท่านั้น)
       cats.tax.rev+=it.price;cats.tax.cost+=it.price;
     } else if(it.code.startsWith('PRB-')&&PRB_BASE[it.code]!==undefined){
       const base=PRB_BASE[it.code];
@@ -1825,7 +1909,8 @@ function showInvDetail(num){
       <tbody>
         ${catRow('ค่าตรวจสภาพ',cats.inspect,'🔍')}
         ${catRow('พ.ร.บ.',cats.prb,'📋')}
-        ${catRow('ภาษี / ต่อทะเบียน',cats.tax,'🏛️')}
+        ${catRow('ค่าบริการฝากต่อภาษี',cats.taxsvc,'🤝')}
+        ${catRow('ค่าภาษีรถ (ส่งกรมขนส่ง)',cats.tax,'🏛️')}
         ${catRow('อื่นๆ',cats.other,'📦')}
       </tbody>
     </table>
@@ -1975,19 +2060,26 @@ function updateTaxDoneBadge(){
 
 /* loadTaxCheck — ดึงรถทั้งหมดที่ไม่ใช่ done มาแสดงอัตโนมัติ */
 function loadTaxCheck(){
-  // เพิ่มรถใหม่จาก hist ที่ยังไม่มีใน tcState (ข้ามบิลที่ยกเลิก)
+  // เพิ่มรถใหม่จาก hist ที่ยังไม่มีใน tcState (ข้ามบิลที่ยกเลิก และบิลที่ล้างไปแล้ว)
   hist.forEach(h=>{
     if(h._void)return;
     const key=h.num;
+    if(tcCleared.includes(key))return; // บิลที่กดล้างแล้ว ไม่ดึงกลับมา
     if(!tcState[key]){
       const taxItem=h.items.find(it=>it.code==='TAX-AMT');
+      // ค่าภาษี: บิลจาก Sheets ใช้ _taxAmt, บิล local ใช้ราคาใน item TAX-AMT
+      const taxAmt=(h._taxAmt!==undefined&&h._taxAmt>0)?h._taxAmt:(taxItem?taxItem.price:0);
+      // มีบริการต่อภาษีไหม: เช็คจาก _taxAmt, item code, หรือข้อความรายการ
+      const itemsText=h.items.map(it=>it.name||'').join(' ');
+      const hasTaxSvc=(h._taxAmt>0)||h.items.some(it=>it.code==='TAX-SVC'||it.code==='TAX-AMT')||
+                      /ภาษี|ต่อภาษี/.test(itemsText);
       tcState[key]={
         checked:false,status:'none',
-        taxAmt:taxItem?taxItem.price:0,
+        taxAmt:taxAmt,
         plate:h.plate,owner:h.owner||'',phone:h.phone||'',
         vtype:h.vtype,cyear:h.cyear||'',
         date:h.date,time:h.time,num:h.num,
-        hasTaxSvc:h.items.some(it=>it.code==='TAX-SVC'||it.code==='TAX-AMT'),
+        hasTaxSvc:hasTaxSvc,
       };
     }
   });
@@ -2138,9 +2230,15 @@ function tcUndo(num){
 }
 
 function clearDone(){
-  if(!confirm('ล้างรายการต่อภาษีสำเร็จทั้งหมด?'))return;
-  Object.keys(tcState).forEach(k=>{if(tcState[k].status==='done')delete tcState[k];});
-  saveTcState();updateTaxDoneBadge();renderTaxDone();showToast('ล้างแล้ว');
+  if(!confirm('ล้างรายการต่อภาษีสำเร็จทั้งหมด?\n(บิลจะออกจากรายการต่อภาษี แต่ยังอยู่ในประวัติ)'))return;
+  Object.keys(tcState).forEach(k=>{
+    if(tcState[k].status==='done'){
+      // จำว่าบิลนี้ถูกล้างแล้ว จะได้ไม่ดึงกลับมาตอน loadTaxCheck
+      if(!tcCleared.includes(k))tcCleared.push(k);
+      delete tcState[k];
+    }
+  });
+  saveTcState();saveTcCleared();updateTaxDoneBadge();renderTaxDone();showToast('ล้างแล้ว');
 }
 
 function setToday(){
