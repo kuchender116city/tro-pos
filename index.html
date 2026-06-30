@@ -478,7 +478,7 @@ let hist=JSON.parse(localStorage.getItem('tro_hist')||'[]');
 let cfg=JSON.parse(localStorage.getItem('tro_cfg')||'{"name":"สถานตรวจสภาพรถ XXX","license":"ตรอ.00-0000","addr":"123 ถนน... กรุงเทพฯ 10000","tel":"02-xxx-xxxx","tax":"x-xxxx-xxxxx-xx-x"}');
 
 /* ===== GOOGLE SHEETS SYNC ===== */
-const GAS_URL='https://script.google.com/macros/s/AKfycbyaa4gVKzO0VKXFFJyDus_oMnrOynS7k_guTjI1fs5MIicKrqWuZb8XwxM5ITLLRDOj/exec';
+const GAS_URL='https://script.google.com/macros/s/AKfycbxtjQhmzm5X1Ba8674fWLrJDJS1dYdieztWoR9Cv0OF8OFtgNcko3HDnakQJz0Y9fA/exec';
 let gsOnline=false;
 let offlineQueue=JSON.parse(localStorage.getItem('tro_offline_queue')||'[]');
 
@@ -512,14 +512,20 @@ function updateQueueBadge(){
 /* ดึงเลขบิล — ถ้าออฟไลน์ใช้เลขเครื่องตัวเอง */
 async function gsGetNextBillNum(){
   if(!navigator.onLine) return localNextBillNum();
-  try{
-    const num=await jsonpGet('getNextBillNum',6000);
-    if(num&&num.num){gsStatus(true);return num.num;}
-    throw new Error('no num');
-  }catch(e){
-    gsStatus(false,'เน็ตขาด — ใช้เลขบิลเครื่องนี้');
-    return localNextBillNum();
+  for(let attempt=1;attempt<=3;attempt++){
+    try{
+      if(attempt>1) await new Promise(r=>setTimeout(r,Math.random()*500+200));
+      const d=await jsonpGet('getNextBillNum',6000);
+      if(d&&d.num){gsStatus(true);return d.num;}
+      throw new Error('no num');
+    }catch(e){
+      if(attempt===3){
+        gsStatus(false,'เน็ตขาด — ใช้เลขบิลเครื่องนี้');
+        return localNextBillNum();
+      }
+    }
   }
+  return localNextBillNum();
 }
 
 function localNextBillNum(){
@@ -529,7 +535,7 @@ function localNextBillNum(){
 
 /* บันทึกใบเสร็จ — ใช้ no-cors POST */
 async function gsSaveReceipt(rec){
-  const {profit}=calcBillProfit(rec.items);
+  const {profit}=calcBillProfit(rec.items,rec);
   const cost=rec.total-profit;
   const payload={
     action:'saveReceipt',
@@ -605,29 +611,39 @@ async function gsSyncQueue(){
   }
 }
 
-/* ดึงข้อมูลจาก Sheets มา merge */
+/* ดึงข้อมูลจาก Sheets มา merge — เป็น single source of truth */
 async function gsFetchReceipts(){
   if(!navigator.onLine){gsStatus(false,'ออฟไลน์');return;}
   try{
     const d=await jsonpGet('getReceipts',8000);
-    if(d&&d.rows){
-      const localNums=new Set(hist.map(h=>h.num));
-      const newRows=(d.rows||[])
-        .filter(r=>!localNums.has(r['เลขที่']))
-        .map(r=>({
-          num:r['เลขที่'],date:r['วันที่'],time:r['เวลา'],
+    if(d&&d.rows!==undefined){
+      // Sheets เป็น master — merge เข้า local
+      const sheetsMap={};
+      (d.rows||[]).forEach(r=>{
+        const num=r['เลขที่'];
+        if(!num)return;
+        sheetsMap[num]={
+          num,date:r['วันที่'],time:r['เวลา'],
           plate:r['ทะเบียน'],vtype:r['ประเภท'],
           owner:r['ชื่อเจ้าของ'],phone:r['โทร'],cyear:r['ปีรถ'],
           items:[{code:'_gs',name:r['รายการ'],price:parseFloat(r['ยอดรวม'])||0}],
-          total:parseFloat(r['ยอดรวม'])||0,_fromSheets:true
-        }));
-      if(newRows.length){
-        hist=[...hist,...newRows].sort((a,b)=>b.num.localeCompare(a.num));
-        localStorage.setItem('tro_hist',JSON.stringify(hist));
-        if(document.getElementById('pg-hist').classList.contains('on'))rHist();
-        if(document.getElementById('pg-summary').classList.contains('on'))calcSummary();
-      }
+          total:parseFloat(r['ยอดรวม'])||0,
+          _cost:parseFloat(r['ต้นทุน'])||0,
+          _profit:parseFloat(r['กำไร'])||0,
+          _fromSheets:true
+        };
+      });
+      // local-only records (ออฟไลน์บิล ยังไม่ sync)
+      const localOnly=hist.filter(h=>h._fromSheets!==true&&!sheetsMap[h.num]);
+      // รวม Sheets + local offline
+      const merged=[...Object.values(sheetsMap),...localOnly]
+        .sort((a,b)=>b.num.localeCompare(a.num));
+      hist=merged;
+      localStorage.setItem('tro_hist',JSON.stringify(hist));
       gsStatus(true);
+      // refresh หน้าที่กำลังดูอยู่
+      if(document.getElementById('pg-hist').classList.contains('on'))rHist();
+      if(document.getElementById('pg-summary').classList.contains('on'))calcSummary();
       await gsSyncQueue();
     }
   }catch(e){
@@ -644,8 +660,8 @@ window.addEventListener('offline', ()=>{
   gsStatus(false,'เน็ตขาด');showToast('📴 ออฟไลน์ — บันทึกในเครื่องไว้ก่อน');
 });
 
-// Auto-refresh ทุก 60 วินาที
-setInterval(gsFetchReceipts, 60000);
+// Auto-refresh ทุก 15 วินาที (realtime หลายเครื่อง)
+setInterval(gsFetchReceipts, 15000);
 // เชื่อมต่อครั้งแรก
 setTimeout(gsFetchReceipts, 1500);
 
@@ -1042,11 +1058,23 @@ function stab(t){
     document.getElementById('pg-'+x).classList.toggle('on',x===t);
     document.getElementById('tab-'+x).classList.toggle('on',x===t);
   });
-  if(t==='hist')rHist();
   if(t==='cfg'){loadCfg();renderComCfg();}
-  if(t==='summary')initSummaryDates();
-  if(t==='taxcheck')loadTaxCheck();
   if(t==='taxdone')renderTaxDone();
+
+  // หน้าที่ต้องดึงข้อมูลสดจาก Sheets ทุกครั้ง
+  if(t==='hist'){
+    const el=document.getElementById('hlist');
+    if(el)el.innerHTML='<div style="text-align:center;padding:32px;color:var(--txt3);">⏳ กำลังโหลดข้อมูลล่าสุด...</div>';
+    gsFetchReceipts().finally(()=>rHist());
+  }
+  if(t==='summary'){
+    const el=document.getElementById('sum-result');
+    if(el)el.innerHTML='<div style="text-align:center;padding:32px;color:var(--txt3);">⏳ กำลังโหลดข้อมูลล่าสุด...</div>';
+    gsFetchReceipts().finally(()=>initSummaryDates());
+  }
+  if(t==='taxcheck'){
+    gsFetchReceipts().finally(()=>loadTaxCheck());
+  }
 }
 
 /* ===== HISTORY ===== */
@@ -1101,13 +1129,52 @@ const FIXED_PROFIT={'TRO-01':200,'TRO-02':60,'TAX-SVC':180};
 // ค่าคอมมิชชั่นบริษัท: {id: เปอร์เซ็นต์}
 let comCfg=JSON.parse(localStorage.getItem('tro_com')||'{}');
 
-function loadCfg(){
-  document.getElementById('cn').value=cfg.name||'';
-  document.getElementById('cl').value=cfg.license||'';
-  document.getElementById('ca').value=cfg.addr||'';
-  document.getElementById('ct').value=cfg.tel||'';
-  document.getElementById('cx').value=cfg.tax||'';
+/* ===== SYNC CONFIG TO/FROM SHEETS ===== */
+async function gsGetConfig(){
+  try{
+    const d=await jsonpGet('getConfig',6000);
+    if(d&&d.cfg){
+      cfg={...cfg,...d.cfg};
+      localStorage.setItem('tro_cfg',JSON.stringify(cfg));
+    }
+    if(d&&d.comCfg){
+      comCfg={...comCfg,...d.comCfg};
+      localStorage.setItem('tro_com',JSON.stringify(comCfg));
+    }
+    gsStatus(true);
+  }catch(e){/* ใช้ local แทน */}
 }
+
+async function gsSaveConfig(type){
+  try{
+    const payload={action:'saveConfig',type,
+      cfg:type==='shop'?cfg:undefined,
+      comCfg:type==='com'?comCfg:undefined};
+    await fetch(GAS_URL,{method:'POST',mode:'no-cors',
+      headers:{'Content-Type':'text/plain'},
+      body:JSON.stringify(payload)});
+  }catch(e){/* silent fail */}
+}
+
+function loadCfg(){
+  // ดึง config จาก Sheets ก่อน แล้ว populate form
+  gsGetConfig().then(()=>{
+    document.getElementById('cn').value=cfg.name||'';
+    document.getElementById('cl').value=cfg.license||'';
+    document.getElementById('ca').value=cfg.addr||'';
+    document.getElementById('ct').value=cfg.tel||'';
+    document.getElementById('cx').value=cfg.tax||'';
+    renderComCfg();
+  }).catch(()=>{
+    document.getElementById('cn').value=cfg.name||'';
+    document.getElementById('cl').value=cfg.license||'';
+    document.getElementById('ca').value=cfg.addr||'';
+    document.getElementById('ct').value=cfg.tel||'';
+    document.getElementById('cx').value=cfg.tax||'';
+    renderComCfg();
+  });
+}
+
 function saveCfg(){
   cfg={
     name:document.getElementById('cn').value||cfg.name,
@@ -1117,7 +1184,8 @@ function saveCfg(){
     tax:document.getElementById('cx').value||cfg.tax
   };
   localStorage.setItem('tro_cfg',JSON.stringify(cfg));
-  showToast('บันทึกการตั้งค่าร้านเรียบร้อย');
+  gsSaveConfig('shop');
+  showToast('✅ บันทึกการตั้งค่าร้าน — sync ทุกเครื่องแล้ว');
 }
 
 function renderComCfg(){
@@ -1147,7 +1215,8 @@ function saveComCfg(){
     comCfg[co.id]=parseFloat(document.getElementById('com-'+co.id).value)||0;
   });
   localStorage.setItem('tro_com',JSON.stringify(comCfg));
-  showToast('บันทึกค่าคอมมิชชั่นเรียบร้อย');
+  gsSaveConfig('com');
+  showToast('✅ บันทึกค่าคอม — sync ทุกเครื่องแล้ว');
 }
 
 /* ===== DATE HELPER ===== */
@@ -1158,19 +1227,28 @@ function thDateToJS(thDate){
 }
 
 /* ===== PROFIT CALC HELPER ===== */
-function calcBillProfit(items){
+function calcBillProfit(items, record){
+  // ถ้า record มาจาก Sheets ใช้ค่าที่บันทึกไว้เลย (แม่นยำกว่า)
+  if(record&&record._fromSheets&&record._profit!==undefined){
+    const rev=record.total||0;
+    const profit=record._profit||0;
+    const cost=record._cost||(rev-profit);
+    const cats={inspect:{rev:0,cost:0,profit:0},prb:{rev:0,cost:0,profit:0},tax:{rev:0,cost:0,profit:0},other:{rev:rev,cost:cost,profit:profit}};
+    return{rev,cost,profit,cats};
+  }
+  // คำนวณจาก items (local records)
   let rev=0,cost=0,profit=0;
   const cats={inspect:{rev:0,cost:0,profit:0},prb:{rev:0,cost:0,profit:0},tax:{rev:0,cost:0,profit:0},other:{rev:0,cost:0,profit:0}};
   items.forEach(it=>{
     rev+=it.price;
-    if(it.code==='TRO-01'){
-      const p=FIXED_PROFIT['TRO-01'];
+    if(it.code==='TRO-01'||it.code==='TRO-02'){
+      const p=FIXED_PROFIT[it.code]||0;
       profit+=p;cats.inspect.rev+=it.price;cats.inspect.cost+=(it.price-p);cats.inspect.profit+=p;
     } else if(it.code==='TAX-SVC'){
       const p=FIXED_PROFIT['TAX-SVC'];
       profit+=p;cats.tax.rev+=it.price;cats.tax.cost+=(it.price-p);cats.tax.profit+=p;
     } else if(it.code==='TAX-AMT'){
-      cats.tax.rev+=it.price;cats.tax.cost+=it.price;// ค่าภาษีจริงไม่มีกำไร
+      cats.tax.rev+=it.price;cats.tax.cost+=it.price;
     } else if(it.code.startsWith('PRB-')&&PRB_BASE[it.code]!==undefined){
       const base=PRB_BASE[it.code];
       const insId=INS_COS.find(c=>c.name===it.ins)?.id;
@@ -1189,7 +1267,7 @@ function calcBillProfit(items){
 /* ===== INVOICE DETAIL MODAL ===== */
 function showInvDetail(num){
   const h=hist.find(r=>r.num===num);if(!h)return;
-  const {rev,cost,profit,cats}=calcBillProfit(h.items);
+  const {rev,cost,profit,cats}=calcBillProfit(h.items,h);
   const catRow=(label,c,icon)=>c.rev===0?'':`
     <tr style="border-bottom:1px solid #f0f0f0;">
       <td style="padding:8px 10px;font-size:13px;">${icon} ${label}</td>
@@ -1269,7 +1347,7 @@ function calcSummary(){
     return;
   }
   let totalRev=0,totalCost=0,totalProfit=0;
-  filtered.forEach(h=>{const r=calcBillProfit(h.items);totalRev+=r.rev;totalCost+=r.cost;totalProfit+=r.profit;});
+  filtered.forEach(h=>{const r=calcBillProfit(h.items,h);totalRev+=r.rev;totalCost+=r.cost;totalProfit+=r.profit;});
   const kpi=(label,val,color,sub='')=>`
     <div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow);">
       <div style="font-size:12px;color:var(--txt3);margin-bottom:4px;">${label}</div>
@@ -1277,7 +1355,7 @@ function calcSummary(){
       ${sub?`<div style="font-size:11px;color:var(--txt3);margin-top:2px;">${sub}</div>`:''}
     </div>`;
   const rows=filtered.map(h=>{
-    const r=calcBillProfit(h.items);
+    const r=calcBillProfit(h.items,h);
     return`<tr style="border-bottom:1px solid #f0f0f0;cursor:pointer;" onclick="showInvDetail('${h.num}')" onmouseover="this.style.background='#f8faff'" onmouseout="this.style.background=''">
       <td style="padding:8px 10px;">
         <div style="font-size:13px;font-weight:600;">${h.num}</div>
