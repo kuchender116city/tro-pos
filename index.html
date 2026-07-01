@@ -275,6 +275,9 @@
   <button class="nb" onclick="stab('cfg')" id="tab-cfg"><i class="ti ti-settings"></i> ตั้งค่า</button>
 </div>
 
+<!-- แถบเตือนนาฬิกาเครื่องเพี้ยน -->
+<div id="clock-warning" style="display:none;align-items:center;gap:10px;background:#c0392b;color:#fff;padding:10px 16px;font-size:13px;"></div>
+
 <!-- ===== SALE PAGE ===== -->
 <div id="pg-sale" class="page on">
   <div class="sale-layout">
@@ -851,6 +854,8 @@ async function gsFetchReceipts(){
   try{
     const d=await jsonpGet('getReceipts',8000);
     if(d&&d.rows!==undefined){
+      // เทียบเวลาเครื่องกับ server — เตือนถ้านาฬิกาเพี้ยน
+      if(d.serverDate)checkClockSkew(d.serverDate);
       // Sheets เป็น master — merge เข้า local
       const sheetsMap={};
       (d.rows||[]).forEach(r=>{
@@ -1037,6 +1042,35 @@ function dn(){
   const d=new Date();
   const m=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
   return d.getDate()+' '+m[d.getMonth()]+' '+(d.getFullYear()+543);
+}
+
+/* ===== ตรวจนาฬิกาเครื่องเทียบกับ Google Server =====
+   ถ้าต่างกันเกิน 1 วัน แสดงแถบเตือน เพราะบิลใช้เวลา server แต่หน้าจอใช้เวลาเครื่อง
+   ถ้าเครื่องเพี้ยน การดูสรุปยอด "วันนี้" จะสับสน */
+function checkClockSkew(serverDateStr){
+  try{
+    // serverDateStr = 'YYYY-MM-DD' (ค.ศ. เวลาไทย)
+    const sv=new Date(serverDateStr+'T12:00:00');
+    const now=new Date();
+    const diffDays=Math.round((now-sv)/86400000);
+    const bar=document.getElementById('clock-warning');
+    if(!bar)return;
+    if(Math.abs(diffDays)>=1){
+      // แปลง server date เป็น พ.ศ. อ่านง่าย
+      const parts=serverDateStr.split('-');
+      const be=parseInt(parts[0])+543;
+      const mTH=['','มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+      const svThai=parseInt(parts[2])+' '+mTH[parseInt(parts[1])]+' '+be;
+      bar.style.display='flex';
+      bar.innerHTML=`<div style="flex:1;">
+        ⚠️ <b>นาฬิกาเครื่องนี้ไม่ตรง!</b> เครื่องคุณ = ${dn()} แต่เวลาจริง = <b>${svThai}</b>
+        <div style="font-size:11px;opacity:.9;margin-top:2px;">บิลจะบันทึกด้วยเวลาจริง (${svThai}) แต่หน้าจออาจแสดงวันผิด — กรุณาตั้งนาฬิกาเครื่องให้ตรง (เปิด "ตั้งเวลาอัตโนมัติ")</div>
+      </div>
+      <button onclick="this.parentElement.style.display='none'" style="background:rgba(255,255,255,.3);border:none;color:#fff;border-radius:6px;padding:4px 10px;cursor:pointer;font-family:'Sarabun',sans-serif;font-size:12px;white-space:nowrap;">รับทราบ</button>`;
+    } else {
+      bar.style.display='none';
+    }
+  }catch(e){/* silent */}
 }
 function tn(){
   const d=new Date();
