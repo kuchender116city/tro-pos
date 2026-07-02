@@ -566,7 +566,7 @@ const SVCS=[
   ]},
 ];
 
-const INS_COS=[
+const INS_COS_BUILTIN=[
   {id:'icare',   name:'ไอแคร์ประกันภัย',      color:'#E53935', abbr:'iCare'},
   {id:'tokio',   name:'โตเกียวมารีนประกันภัย', color:'#1565C0', abbr:'Tokio'},
   {id:'viriya',  name:'วิริยะประกันภัย',        color:'#F57F17', abbr:'วิริยะ'},
@@ -577,10 +577,17 @@ const INS_COS=[
   {id:'klang',   name:'กลาง RVP',               color:'#0D47A1', abbr:'กลาง', motoOnly:true},
 ];
 
-// บริษัทที่รองรับ พ.ร.บ. รถยนต์ (ไม่รวมจักรยานยนต์)
-const INS_CAR=INS_COS.filter(c=>!c.motoOnly);
-// บริษัทที่รองรับ พ.ร.บ. จักรยานยนต์
-const INS_MOTO=INS_COS.filter(c=>c.motoOnly);
+// บริษัทที่ผู้ใช้เพิ่มเอง เก็บใน localStorage + sync ผ่าน comCfg (ขึ้น Sheets)
+let customInsCos=JSON.parse(localStorage.getItem('tro_custom_ins')||'[]');
+
+// รวม built-in + custom — เรียกใช้แทน INS_COS เดิม
+function getAllInsCos(){
+  return [...INS_COS_BUILTIN, ...customInsCos];
+}
+
+// บริษัทที่รองรับ พ.ร.บ. รถยนต์ / จักรยานยนต์ — คำนวณสดทุกครั้ง (บริษัทใหม่โผล่ทันที)
+function getInsCar(){return getAllInsCos().filter(c=>!c.motoOnly);}
+function getInsMoto(){return getAllInsCos().filter(c=>c.motoOnly);}
 
 let selectedInsCo=null; // {id, name, color, abbr}
 let pendingPRBCode=null; // code ที่รอเลือกบริษัทก่อน add
@@ -1119,7 +1126,7 @@ function openInsModal(code,name,price){
   }
   // จักรยานยนต์ → เลือก กลาง RVP อัตโนมัติทันที
   if(code==='PRB-03'){
-    const co=INS_COS.find(c=>c.id==='klang');
+    const co=getAllInsCos().find(c=>c.id==='klang');
     cart=cart.filter(x=>x.code!==code);
     cart.push({code,name,price,ins:co.name,insColor:co.color});
     rSvcs();rCart();
@@ -1129,7 +1136,7 @@ function openInsModal(code,name,price){
   // รถยนต์ → แสดง modal เลือกบริษัท
   pendingPRBCode={code,name,price};
   document.getElementById('ins-modal-sub').textContent=name+' — ฿'+price.toLocaleString();
-  const list=INS_CAR;
+  const list=getInsCar();
   document.getElementById('ins-grid').innerHTML=list.map(co=>`
     <div onclick="selectIns('${co.id}')" style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 8px;border:2px solid #eee;border-radius:10px;cursor:pointer;transition:all .15s;"
       onmouseover="this.style.borderColor='${co.color}';this.style.background='#f8faff';"
@@ -1142,7 +1149,7 @@ function openInsModal(code,name,price){
 
 function selectIns(id){
   if(!pendingPRBCode)return;
-  const co=INS_COS.find(x=>x.id===id);
+  const co=getAllInsCos().find(x=>x.id===id);
   if(!co)return;
   const {code,name,price}=pendingPRBCode;
   cart=cart.filter(x=>x.code!==code);
@@ -1531,6 +1538,7 @@ function stab(t){
 
   // หน้าที่ต้องดึงข้อมูลสดจาก Sheets ทุกครั้ง
   if(t==='hist'){
+    histShowAll=false; // เริ่มที่วันล่าสุดเสมอ
     rHist(); // แสดงข้อมูล local ทันที
     gsFetchReceipts().finally(()=>rHist()); // แล้วอัปเดตเมื่อ fetch เสร็จ
   }
@@ -1549,9 +1557,17 @@ function stab(t){
 }
 
 /* ===== HISTORY ===== */
+let histShowAll=false; // true = แสดงทุกวัน, false = แสดงวันล่าสุดเท่านั้น
+
 function clearHistDates(){
   document.getElementById('hist-from').value='';
   document.getElementById('hist-to').value='';
+  histShowAll=false; // กลับไปโหมดวันล่าสุด
+  rHist();
+}
+
+function showAllHist(){
+  histShowAll=true;
   rHist();
 }
 
@@ -1565,6 +1581,17 @@ function rHist(){
   if(from)from.setHours(0,0,0,0);
   if(to)to.setHours(23,59,59,999);
   const el=document.getElementById('hlist');
+  // ถ้าไม่ได้ค้นหา ไม่ได้เลือกวันที่ และไม่ได้กดดูทั้งหมด → แสดงแค่วันล่าสุด
+  const noFilter=!q && !from && !to && !histShowAll;
+  let latestDayStr=null;
+  if(noFilter){
+    const branchList=filterByBranch(hist).filter(h=>!h._void);
+    // หาวันล่าสุด (บิลเรียงใหม่→เก่าอยู่แล้ว เอาตัวแรกที่แปลงวันได้)
+    for(const h of branchList){
+      const d=thDateToJS(h.date);
+      if(d){latestDayStr=h.date;break;}
+    }
+  }
   let f=filterByBranch(hist).filter(h=>{
     const okText=h.plate.toLowerCase().includes(q)||(h.owner||'').toLowerCase().includes(q);
     if(!okText)return false;
@@ -1574,10 +1601,25 @@ function rHist(){
       if(from&&d<from)return false;
       if(to&&d>to)return false;
     }
+    // โหมด default: แสดงเฉพาะบิลวันล่าสุด
+    if(noFilter&&latestDayStr){
+      const d1=thDateToJS(h.date), d2=thDateToJS(latestDayStr);
+      if(d1&&d2){
+        if(d1.getFullYear()!==d2.getFullYear()||d1.getMonth()!==d2.getMonth()||d1.getDate()!==d2.getDate())return false;
+      }
+    }
     return true;
   });
   if(!f.length){el.innerHTML='<p style="color:var(--txt3);font-size:14px;text-align:center;padding:40px 0;">ไม่พบรายการตามเงื่อนไข</p>';return;}
-  el.innerHTML=f.map(h=>{
+  // แถบบอกว่ากำลังแสดงวันล่าสุด + ปุ่มดูทั้งหมด
+  let banner='';
+  if(noFilter&&latestDayStr){
+    banner=`<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--blue-lt);border:1px solid var(--blue-bd);border-radius:var(--radius-sm);padding:8px 12px;margin-bottom:10px;font-size:13px;color:var(--txt);">
+      <span>📅 แสดงบิลวันล่าสุด (${formatThaiDate(latestDayStr)}) · ${f.length} รายการ</span>
+      <button onclick="showAllHist()" style="background:var(--blue);color:#fff;border:none;border-radius:14px;padding:4px 14px;font-size:12px;cursor:pointer;font-family:'Sarabun',sans-serif;white-space:nowrap;">ดูทั้งหมด</button>
+    </div>`;
+  }
+  el.innerHTML=banner+f.map(h=>{
     const isVoid=h._void;
     const isOffline=h._offline&&!h._synced;
     let statusBadge;
@@ -1742,6 +1784,11 @@ async function gsGetConfig(){
     if(d&&d.comCfg){
       comCfg={...comCfg,...d.comCfg};
       localStorage.setItem('tro_com',JSON.stringify(comCfg));
+      // ดึงบริษัทประกันที่เพิ่มเองกลับมา (sync จากเครื่องอื่น)
+      if(Array.isArray(comCfg._customCos)){
+        customInsCos=comCfg._customCos;
+        localStorage.setItem('tro_custom_ins',JSON.stringify(customInsCos));
+      }
     }
     gsStatus(true);
   }catch(e){/* ใช้ local แทน */}
@@ -1822,32 +1869,78 @@ function reloadFromSheets(){
 }
 
 function renderComCfg(){
-  document.getElementById('com-cfg-list').innerHTML=INS_COS.map(co=>`
+  const all=getAllInsCos();
+  document.getElementById('com-cfg-list').innerHTML=all.map(co=>{
+    const isCustom=customInsCos.some(c=>c.id===co.id);
+    return`
     <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);border-radius:var(--radius-sm);border:1px solid var(--border);">
       <div style="width:36px;height:36px;border-radius:50%;background:${co.color};display:flex;align-items:center;justify-content:center;color:${co.dark?'#333':'#fff'};font-size:11px;font-weight:700;flex-shrink:0;">${co.abbr}</div>
-      <div style="flex:1;font-size:14px;font-weight:500;">${co.name}</div>
+      <div style="flex:1;font-size:14px;font-weight:500;">${co.name}${co.motoOnly?' <span style="font-size:10px;color:var(--txt3);">(จยย.)</span>':''}</div>
       <div style="display:flex;align-items:center;gap:6px;">
-        <button onclick="adjCom('${co.id}',-1)" style="width:28px;height:28px;border-radius:50%;border:1px solid var(--border2);background:#fff;cursor:pointer;font-size:16px;line-height:1;">−</button>
+        <button onclick="adjCom('${co.id}',-0.5)" style="width:28px;height:28px;border-radius:50%;border:1px solid var(--border2);background:#fff;cursor:pointer;font-size:16px;line-height:1;">−</button>
         <div style="text-align:center;min-width:52px;">
           <input type="number" id="com-${co.id}" value="${comCfg[co.id]??20}" min="0" max="100" step="0.5"
-            style="width:52px;padding:5px 4px;font-size:14px;font-weight:600;text-align:center;border:1px solid var(--border2);border-radius:var(--radius-sm);font-family:'Sarabun',sans-serif;">
+            style="width:56px;padding:5px 4px;font-size:14px;font-weight:600;text-align:center;border:1px solid var(--border2);border-radius:var(--radius-sm);font-family:'Sarabun',sans-serif;">
         </div>
-        <button onclick="adjCom('${co.id}',1)" style="width:28px;height:28px;border-radius:50%;border:1px solid var(--border2);background:#fff;cursor:pointer;font-size:16px;line-height:1;">+</button>
+        <button onclick="adjCom('${co.id}',0.5)" style="width:28px;height:28px;border-radius:50%;border:1px solid var(--border2);background:#fff;cursor:pointer;font-size:16px;line-height:1;">+</button>
         <span style="font-size:13px;color:var(--txt2);">%</span>
+        ${isCustom?`<button onclick="removeInsCo('${co.id}')" title="ลบบริษัทนี้" style="width:28px;height:28px;border-radius:50%;border:1px solid #f0c0c0;background:#fff;cursor:pointer;font-size:13px;color:#c0392b;margin-left:4px;">✕</button>`:''}
       </div>
-    </div>`).join('');
+    </div>`;}).join('')
+    +`<button onclick="addInsCoPrompt()" style="width:100%;margin-top:10px;padding:10px;border:1.5px dashed var(--blue);background:var(--blue-lt);color:var(--blue);border-radius:var(--radius-sm);cursor:pointer;font-family:'Sarabun',sans-serif;font-size:14px;font-weight:600;">
+      <i class="ti ti-plus" style="vertical-align:-2px;"></i> เพิ่มบริษัทประกันภัย
+    </button>`;
+}
+
+/* เพิ่มบริษัทประกันภัยใหม่ */
+function addInsCoPrompt(){
+  const name=prompt('ชื่อบริษัทประกันภัย (เช่น เมืองไทยประกันภัย):');
+  if(!name||!name.trim())return;
+  const abbr=prompt('ชื่อย่อ/ตัวอักษรบนไอคอน (เช่น เมืองไทย):',name.trim().slice(0,6));
+  if(abbr===null)return;
+  // สร้าง id ที่ไม่ซ้ำ
+  const id='cust_'+Date.now().toString(36);
+  // สีสุ่มจากชุดสีสวยๆ
+  const palette=['#6A1B9A','#00897B','#5D4037','#C62828','#283593','#EF6C00','#37474F','#AD1457'];
+  const color=palette[customInsCos.length%palette.length];
+  const isMoto=confirm('บริษัทนี้ใช้สำหรับ พ.ร.บ. จักรยานยนต์ เท่านั้นหรือไม่?\n(กด OK = จักรยานยนต์เท่านั้น, Cancel = รถยนต์)');
+  const co={id,name:name.trim(),abbr:(abbr.trim()||name.trim().slice(0,6)),color};
+  if(isMoto)co.motoOnly=true;
+  customInsCos.push(co);
+  comCfg[id]=20; // ค่าคอมเริ่มต้น 20%
+  localStorage.setItem('tro_custom_ins',JSON.stringify(customInsCos));
+  renderComCfg();
+  showToast('เพิ่ม '+name.trim()+' แล้ว — อย่าลืมกดบันทึกค่าคอม');
+}
+
+/* ลบบริษัทที่เพิ่มเอง */
+function removeInsCo(id){
+  const co=customInsCos.find(c=>c.id===id);
+  if(!co)return;
+  if(!confirm('ลบ "'+co.name+'" ?'))return;
+  customInsCos=customInsCos.filter(c=>c.id!==id);
+  delete comCfg[id];
+  localStorage.setItem('tro_custom_ins',JSON.stringify(customInsCos));
+  renderComCfg();
+  showToast('ลบแล้ว — อย่าลืมกดบันทึกค่าคอม');
 }
 
 function adjCom(id,delta){
   const el=document.getElementById('com-'+id);
-  el.value=Math.max(0,Math.min(100,parseFloat(el.value||0)+delta));
+  // ปรับทีละ 0.5 รองรับทศนิยม
+  const v=Math.max(0,Math.min(100,parseFloat(el.value||0)+delta));
+  el.value=Math.round(v*2)/2; // ปัดให้ลงตัวที่ .0 หรือ .5
 }
 
 function saveComCfg(){
-  INS_COS.forEach(co=>{
-    comCfg[co.id]=parseFloat(document.getElementById('com-'+co.id).value)||0;
+  getAllInsCos().forEach(co=>{
+    const el=document.getElementById('com-'+co.id);
+    if(el)comCfg[co.id]=parseFloat(el.value)||0;
   });
+  // เก็บ custom companies ลง comCfg ด้วย เพื่อ sync ขึ้น Sheets (ทุกเครื่องเห็นบริษัทใหม่)
+  comCfg._customCos=customInsCos;
   localStorage.setItem('tro_com',JSON.stringify(comCfg));
+  localStorage.setItem('tro_custom_ins',JSON.stringify(customInsCos));
   gsSaveConfig('com');
   showToast('✅ บันทึกค่าคอม — sync ทุกเครื่องแล้ว');
 }
@@ -1919,7 +2012,7 @@ function calcBillProfit(items, record){
       cats.tax.rev+=it.price;cats.tax.cost+=it.price;
     } else if(it.code.startsWith('PRB-')&&PRB_BASE[it.code]!==undefined){
       const base=PRB_BASE[it.code];
-      const insId=INS_COS.find(c=>c.name===it.ins)?.id;
+      const insId=getAllInsCos().find(c=>c.name===it.ins)?.id;
       const pct=insId?(comCfg[insId]??20):20;
       const com=Math.round(base*pct/100*100)/100;
       profit+=com;
@@ -1970,7 +2063,7 @@ function showInvDetail(num){
     <div style="font-size:13px;font-weight:600;color:#1a1d23;margin-bottom:6px;">รายการในบิล</div>
     <div style="background:#fff;border:1px solid #eee;border-radius:8px;overflow:hidden;margin-bottom:14px;">
       ${h.items.map((it,i)=>{
-        const insId=INS_COS.find(c=>c.name===it.ins)?.id;
+        const insId=getAllInsCos().find(c=>c.name===it.ins)?.id;
         const pct=insId?(comCfg[insId]??20):20;
         const base=PRB_BASE[it.code];
         const com=it.code.startsWith('PRB-')&&base!=null?Math.round(base*pct/100*100)/100:FIXED_PROFIT[it.code]||0;
