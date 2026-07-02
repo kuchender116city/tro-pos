@@ -873,6 +873,7 @@ async function gsFetchReceipts(){
           _taxAmt:parseFloat(r['ค่าภาษี'])||0,
           _void:String(r['ยกเลิก']||'')==='1'||r['ยกเลิก']===1,
           _ts:r['timestamp']||'',
+          _taxStatus:r['สถานะภาษี']||'none',
           _cats:buildCatsFromSheet(r),
           _fromSheets:true,_synced:true
         };
@@ -1520,7 +1521,13 @@ function stab(t){
     const bn=document.getElementById('cfg-branch-name');
     if(bn)bn.textContent=branch?branch.name+' (รหัส '+branch.code+')':'⚠️ ยังไม่เลือกสาขา';
   }
-  if(t==='taxdone')renderTaxDone();
+  if(t==='taxdone'){
+    renderTaxDone(); // แสดง local ทันที
+    gsFetchReceipts().finally(()=>{
+      loadTaxCheck(); // sync สถานะจาก Sheets
+      if(document.getElementById('pg-taxdone')?.classList.contains('on'))renderTaxDone();
+    });
+  }
 
   // หน้าที่ต้องดึงข้อมูลสดจาก Sheets ทุกครั้ง
   if(t==='hist'){
@@ -1689,6 +1696,18 @@ function unvoidBill(num){
 /* ส่งสถานะ void ไป Sheets */
 async function gsVoidBill(num,isVoid){
   const payload={action:'voidReceipt',secret:API_SECRET,num,voided:isVoid?1:0};
+  if(!navigator.onLine){offlineQueue.push(payload);saveQueue();return;}
+  try{
+    await fetch(GAS_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)});
+  }catch(e){
+    try{await fetch(GAS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify(payload)});}
+    catch(e2){offlineQueue.push(payload);saveQueue();}
+  }
+}
+
+/* ส่งสถานะต่อภาษีขึ้น Sheets — sync ทุกเครื่อง (none/going/done/cleared) */
+async function gsSaveTaxStatus(num,status){
+  const payload={action:'saveTaxStatus',secret:API_SECRET,num,status};
   if(!navigator.onLine){offlineQueue.push(payload);saveQueue();return;}
   try{
     await fetch(GAS_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)});
@@ -2092,36 +2111,46 @@ function updateTaxDoneBadge(){
   if(b){b.style.display=done.length?'inline':'none';b.textContent=done.length;}
 }
 
-/* loadTaxCheck — ดึงรถทั้งหมดที่ไม่ใช่ done มาแสดงอัตโนมัติ */
+/* loadTaxCheck — ดึงรถทั้งหมดที่ไม่ใช่ done มาแสดงอัตโนมัติ
+   สถานะภาษีจาก Sheets (_taxStatus) เป็นตัวหลัก — sync ทุกเครื่อง */
 function loadTaxCheck(){
-  // เพิ่มรถใหม่จาก hist ที่ยังไม่มีใน tcState (ข้ามบิลที่ยกเลิก และบิลที่ล้างไปแล้ว)
   hist.forEach(h=>{
     if(h._void)return;
     const key=h.num;
-    if(tcCleared.includes(key))return; // บิลที่กดล้างแล้ว ไม่ดึงกลับมา
+    // สถานะจาก Sheets เป็น master
+    const sheetStatus=h._taxStatus||'';
+    // ถ้า Sheets บอกว่า cleared = ลบออกจากรายการ (ไม่แสดง)
+    if(sheetStatus==='cleared'){
+      if(!tcCleared.includes(key))tcCleared.push(key);
+      delete tcState[key];
+      return;
+    }
+    if(tcCleared.includes(key)&&!sheetStatus)return; // เคยล้างในเครื่อง (บิล local)
+    const taxItem=h.items.find(it=>it.code==='TAX-AMT');
+    const taxAmt=(h._taxAmt!==undefined&&h._taxAmt>0)?h._taxAmt:(taxItem?taxItem.price:0);
+    const itemsText=h.items.map(it=>it.name||'').join(' ');
+    const hasTaxSvc=(h._taxAmt>0)||h.items.some(it=>it.code==='TAX-SVC'||it.code==='TAX-AMT')||
+                    /ภาษี|ต่อภาษี/.test(itemsText);
     if(!tcState[key]){
-      const taxItem=h.items.find(it=>it.code==='TAX-AMT');
-      // ค่าภาษี: บิลจาก Sheets ใช้ _taxAmt, บิล local ใช้ราคาใน item TAX-AMT
-      const taxAmt=(h._taxAmt!==undefined&&h._taxAmt>0)?h._taxAmt:(taxItem?taxItem.price:0);
-      // มีบริการต่อภาษีไหม: เช็คจาก _taxAmt, item code, หรือข้อความรายการ
-      const itemsText=h.items.map(it=>it.name||'').join(' ');
-      const hasTaxSvc=(h._taxAmt>0)||h.items.some(it=>it.code==='TAX-SVC'||it.code==='TAX-AMT')||
-                      /ภาษี|ต่อภาษี/.test(itemsText);
+      // บิลใหม่ — ใช้สถานะจาก Sheets ถ้ามี
       tcState[key]={
-        checked:false,status:'none',
+        checked:sheetStatus==='going',
+        status:sheetStatus||'none',
         taxAmt:taxAmt,
         plate:h.plate,owner:h.owner||'',phone:h.phone||'',
         vtype:h.vtype,cyear:h.cyear||'',
         date:h.date,time:h.time,num:h.num,
         hasTaxSvc:hasTaxSvc,
       };
+    } else if(sheetStatus && sheetStatus!==tcState[key].status){
+      // Sheets มีสถานะใหม่กว่า (เครื่องอื่นอัปเดต) → sync ตาม Sheets
+      tcState[key].status=sheetStatus;
+      tcState[key].checked=(sheetStatus==='going');
     }
   });
   saveTcState();
   updateTaxDoneBadge();
-
-  // กรองเฉพาะที่ยังไม่ done
-  const active=Object.values(tcState).filter(s=>s.status!=='done');
+  const active=Object.values(tcState).filter(s=>s.status!=='done'&&s.status!=='cleared');
   renderTcList(active);
   updateTcBar();
 }
@@ -2204,8 +2233,9 @@ function tcSetStatus(num,status){
   tcState[num].checked=tcState[num].checked;
   saveTcState();
   updateTaxDoneBadge();
+  // sync สถานะขึ้น Sheets เพื่อให้ทุกเครื่องเห็นตรงกัน
+  gsSaveTaxStatus(num,status);
   if(status==='done'){
-    // ย้ายออกจากหน้านี้ทันที — ลบการ์ดแบบ animate
     const card=document.getElementById('tc-card-'+num);
     if(card){
       card.style.transition='opacity .3s,transform .3s';
@@ -2214,7 +2244,6 @@ function tcSetStatus(num,status){
     }
     showToast('✅ ย้ายไปหน้าต่อภาษีสำเร็จแล้ว');
   } else {
-    // re-render current list
     taxCheck();
   }
   updateTcBar();
@@ -2259,6 +2288,7 @@ function renderTaxDone(){
 function tcUndo(num){
   if(tcState[num]){tcState[num].status='none';tcState[num].checked=false;saveTcState();}
   updateTaxDoneBadge();
+  gsSaveTaxStatus(num,'none'); // sync กลับ none ทุกเครื่อง
   renderTaxDone();
   showToast('ย้ายกลับรายการแล้ว');
 }
@@ -2269,6 +2299,7 @@ function clearDone(){
     if(tcState[k].status==='done'){
       // จำว่าบิลนี้ถูกล้างแล้ว จะได้ไม่ดึงกลับมาตอน loadTaxCheck
       if(!tcCleared.includes(k))tcCleared.push(k);
+      gsSaveTaxStatus(k,'cleared'); // sync ขึ้น Sheets ทุกเครื่อง
       delete tcState[k];
     }
   });
