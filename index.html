@@ -2727,10 +2727,27 @@ async function doLogin(){
   const found=users.find(x=>x.username.toLowerCase()===u&&x.passhash===hash);
   if(found){
     loginSuccess(found);
-  } else {
-    errEl.style.display='block';errEl.textContent='ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง';
-    document.getElementById('login-pass').value='';
+    return;
   }
+
+  // กู้ admin ฉุกเฉิน: ถ้า login admin/admin แต่ hash ไม่ตรง (passhash เพี้ยน/ลืมรหัส)
+  // → reset admin กลับเป็น admin/admin เพื่อเข้าไปตั้งใหม่ได้
+  if(u==='admin'&&p==='admin'){
+    const adminUser=users.find(x=>x.username.toLowerCase()==='admin');
+    if(adminUser){
+      const freshHash=await hashPass('admin');
+      adminUser.passhash=freshHash;
+      adminUser.role='admin';
+      localStorage.setItem('tro_users',JSON.stringify(users));
+      await gsSaveUser({username:adminUser.username,passhash:freshHash,name:adminUser.name||'ผู้ดูแลระบบ',role:'admin'});
+      showToast('🔧 กู้บัญชี admin แล้ว');
+      loginSuccess(adminUser);
+      return;
+    }
+  }
+
+  errEl.style.display='block';errEl.textContent='ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง';
+  document.getElementById('login-pass').value='';
 }
 
 function loginSuccess(user){
@@ -2820,8 +2837,16 @@ async function changeMyPassword(){
   const cur=prompt('รหัสผ่านปัจจุบัน:');
   if(cur===null)return;
   const curHash=await hashPass(cur);
-  const me=users.find(x=>x.username===currentUser.username);
-  if(!me||me.passhash!==curHash){showToast('รหัสผ่านปัจจุบันไม่ถูกต้อง');return;}
+  // เทียบกับ passhash ที่เก็บใน local ก่อน (ค่าที่เพิ่ง hash ตอนล็อกอิน แม่นสุด)
+  let me=users.find(x=>x.username===currentUser.username);
+  // ถ้าไม่เจอ หรือ hash ไม่ตรง ลอง sync จาก Sheets แล้วเทียบอีกที
+  if(!me||me.passhash!==curHash){
+    await gsGetUsers();
+    me=users.find(x=>x.username===currentUser.username);
+  }
+  if(!me||me.passhash!==curHash){
+    showToast('รหัสผ่านปัจจุบันไม่ถูกต้อง');return;
+  }
   const nw=prompt('รหัสผ่านใหม่:');
   if(!nw||!nw.trim())return;
   const hash=await hashPass(nw);
